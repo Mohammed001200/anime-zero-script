@@ -8,6 +8,7 @@ function Adapter.new(bindings)
 	return setmetatable({
 		bindings = bindings,
 		capabilities = {
+			snapshot = type(bindings.snapshot) == "function",
 			attack = type(bindings.attack) == "function",
 			breakRubble = type(bindings.breakRubble) == "function",
 			replay = type(bindings.requestReplay) == "function",
@@ -17,11 +18,57 @@ function Adapter.new(bindings)
 	}, Adapter)
 end
 
+function Adapter:integrationStatus()
+	local missing = {}
+	for _, key in { "snapshot", "attack", "breakRubble", "requestReplay" } do
+		if type(self.bindings[key]) ~= "function" then
+			table.insert(missing, key)
+		end
+	end
+	return {
+		configured = #missing == 0,
+		missing = missing,
+		summary = if #missing > 0
+			then "Missing game bindings: " .. table.concat(missing, ", ")
+			else "Bindings supplied; real gameplay still requires validation",
+		replay = if self.capabilities.replay
+			then "Replay binding supplied; completion and new-run confirmation required"
+			else "Auto Retry unavailable: missing requestReplay binding and confirmed completion/new-run state",
+	}
+end
+
+function Adapter:preflight(config)
+	local required = { "snapshot" }
+	if config.autoFarm or config.killAura then
+		table.insert(required, "attack")
+	end
+	if config.autoBreakRubble then
+		table.insert(required, "breakRubble")
+	end
+	if config.autoRetry then
+		table.insert(required, "requestReplay")
+	end
+	local missing = {}
+	for _, key in required do
+		if type(self.bindings[key]) ~= "function" then
+			table.insert(missing, key)
+		end
+	end
+	if #missing > 0 then
+		return false,
+			"Integration unavailable: missing "
+				.. table.concat(missing, ", ")
+				.. ". Automation stopped; open Diagnostics. Recovery cannot create game bindings."
+	end
+	return true
+end
+
 function Adapter:snapshot()
 	if not self.bindings.snapshot then
 		return {
 			ready = false,
-			reason = "Anime Zero integration is not configured. Use the Studio demo or verified bindings.",
+			blocked = true,
+			reason = "Missing snapshot binding: dungeon/run/area, NPCs, rubble and completion are unknown. Open Diagnostics.",
 		}
 	end
 	return self.bindings.snapshot()

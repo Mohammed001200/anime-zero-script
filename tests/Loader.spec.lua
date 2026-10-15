@@ -7,6 +7,43 @@ local function execute(host)
 end
 
 return function(t)
+	t.it(
+		"real adapter startup errors immediately and Auto Retry click explains its missing binding",
+		function()
+			local host = MockClient.new()
+			local session = execute(host)
+			local ok, reason = session.controller:Start()
+			t.equal(ok, false)
+			assert(string.find(reason, "missing snapshot", 1, true))
+			t.equal(session.controller.attempts, 0)
+			t.equal(session.controller.enabled, false)
+			local function findLabel(parent)
+				for _, child in parent:GetChildren() do
+					if child.ClassName == "TextLabel" and child.Text == "Auto Retry Dungeon" then
+						return child
+					end
+					local found = findLabel(child)
+					if found then
+						return found
+					end
+				end
+				return nil
+			end
+			local label = findLabel(session.window.pages.Dashboard)
+			assert(label, "Auto Retry control missing")
+			local notifications = session.window.notifications.sequence
+			label.Parent:FindFirstChildOfClass("TextButton").Activated:Fire()
+			t.equal(session.config:Get().autoRetry, false)
+			t.equal(session.window.pages.Diagnostics.Visible, true)
+			assert(session.window.notifications.sequence > notifications)
+			session.window:_captureDiagnostics()
+			assert(string.find(session.window.reportBox.Text, "CANDIDATES ONLY", 1, true))
+			session.window.capturePhase = "After manual Replay"
+			session.window:_captureDiagnostics()
+			assert(string.find(session.window.reportBox.Text, "After manual Replay", 1, true))
+			session:Destroy()
+		end
+	)
 	t.it("plain Lua/Lune runtime fails with an explicit client-runtime requirement", function()
 		local host = MockClient.new()
 		host.environment.game, host.environment.Instance = nil, nil

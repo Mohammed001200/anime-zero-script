@@ -6,7 +6,7 @@
 | --- | --- |
 | `loader.lua` | The GitHub raw entry point; a complete readable client bundle |
 | `dist/MohammadAndAli.client.lua` | Identical bytes, named for ordinary LocalScript installation |
-| `dist/manifest.json` | All 24 module sources, dependency edges, deterministic order and SHA-256 hashes |
+| `dist/manifest.json` | All 25 module sources, dependency edges, deterministic order and SHA-256 hashes |
 | `scripts/bundle.py` | Standard-library-only builder and freshness check |
 | `standalone.project.json` | Packages just the standalone LocalScript, with no shared module hierarchy |
 | `build/MohammadAndAli-Standalone.rbxlx` | Generated Studio place containing that single client LocalScript |
@@ -25,7 +25,7 @@ This command performs one initial download. The downloaded file contains no furt
 
 Download/outer compilation errors happen **before** `loader.lua` can handle them. A 404, inaccessible repository, missing HttpGet, or missing loadstring must be diagnosed by the host. Inside the file, preflight, module and initialization failures include context and a traceback, are warned, and are rethrown. Partial session resources are cleaned up on construction failure.
 
-As of 2026-10-15 the raw URL returns HTTP 404. Nothing has been committed or pushed by this task. Publishing the reviewed file is a separate action; the prepared local bundle does not make the remote URL available.
+An earlier raw-URL check returned HTTP 404; the user subsequently reported that the loader and GUI run in Anime Zero. This task has not published the updated v1.1.0 bundle. Publishing the reviewed update is separate from preparing the local files.
 
 ## Runtime matrix
 
@@ -35,9 +35,9 @@ As of 2026-10-15 the raw URL returns HTTP 404. Nothing has been committed or pus
 | Exact one-line command in an ordinary LocalScript | Unsupported; normal client scripting does not expose this remote loadstring workflow |
 | Roblox server Script with LoadStringEnabled | Server loadstring is a separate feature. The GUI bundle deliberately rejects server execution and requires LocalPlayer |
 | Studio Play with the demo place | Modular client + separate demo server are packaged; actual engine navigation, UI and replication playtest pending |
-| Client host providing HttpGet + loadstring + ordinary client services | The requested command has the needed API shape, but no such host has been exercised or certified here |
+| Client host providing HttpGet + loadstring + ordinary client services | The user reports the GUI working in their host; the agent has not exercised or certified it or the rebuilt update |
 | Lune/plain Luau process | Cannot display a Roblox GUI. Explicit no-runtime errors are tested; headless mocks verify client startup and lifecycle |
-| Live Anime Zero | No integration or automation is verified. Empty bindings permit the UI shell but do not provide NPC/rubble/combat/progression APIs |
+| Live Anime Zero | GUI startup is user-reported. No gameplay integration is verified; empty bindings do not provide NPC/rubble/combat/progression/replay APIs |
 
 Roblox documents `loadstring` as disabled by default; `ServerScriptService.LoadStringEnabled` applies to **server scripts**. It does not authorize client execution. Documented experience HTTP methods are on HttpService and operate from experience servers. References: [Luau globals](https://create.roblox.com/docs/reference/engine/globals/LuaGlobals), [ServerScriptService](https://create.roblox.com/docs/reference/engine/classes/ServerScriptService), [HttpService](https://create.roblox.com/docs/reference/engine/classes/HttpService).
 

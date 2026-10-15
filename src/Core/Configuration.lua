@@ -5,6 +5,7 @@ Configuration.__index = Configuration
 Configuration.VERSION = 1
 Configuration.defaults = table.freeze({
 	autoFarm = true,
+	killAura = false,
 	autoBreakRubble = true,
 	autoNextArea = true,
 	autoRetry = false,

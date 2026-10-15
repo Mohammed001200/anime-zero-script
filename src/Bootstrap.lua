@@ -9,6 +9,7 @@ local AnimeZeroAdapter = require(script.Parent.Game.AnimeZeroAdapter)
 local StudioDemoAdapter = require(script.Parent.Game.StudioDemoAdapter)
 local MainWindow = require(script.Parent.UI.MainWindow)
 local Cleanup = require(script.Parent.Utils.Cleanup)
+local Theme = require(script.Parent.UI.Theme)
 local Bootstrap = {}
 local activeSession
 local LIFETIME_NAME = "MA_ControllerLifetime"
@@ -35,6 +36,13 @@ function Bootstrap.start()
 				"Mohammad & Ali: existing session is not ready; unload it before retrying"
 			)
 			previous:Fire("Show")
+			if previous:GetAttribute("Version") ~= Theme.version then
+				warn(
+					"[Mohammad & Ali] An older session is still running. Rejoin or unload it before loading version "
+						.. Theme.version
+						.. "; repeated loads only reveal the existing GUI."
+				)
+			end
 			if activeSession and not activeSession.destroyed then
 				return activeSession
 			end
@@ -62,6 +70,7 @@ function Bootstrap.start()
 	local lifetime = Instance.new("BindableEvent")
 	lifetime.Name = LIFETIME_NAME
 	lifetime:SetAttribute("Project", PROJECT)
+	lifetime:SetAttribute("Version", Theme.version)
 	lifetime:SetAttribute("Status", "Starting")
 	lifetime.Parent = playerGui
 	local cleanup = Cleanup.new()
@@ -154,6 +163,12 @@ function Bootstrap.start()
 		activeSession = session
 		lifetime:SetAttribute("Status", "Ready")
 		logger:Log("INFO", "Interface ready", "Start a run from Dashboard")
+		if adapter.integrationStatus then
+			local status = adapter:integrationStatus()
+			if not status.configured then
+				logger:Log("WARN", "Live integration is incomplete", status.summary)
+			end
+		end
 		if not loaded then
 			logger:Log("WARN", "Could not load preferences", preferences)
 		end

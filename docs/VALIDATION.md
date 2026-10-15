@@ -6,16 +6,22 @@ Date: **2026-10-15** (Europe/Stockholm)
 
 | Check | Result |
 | --- | --- |
-| Lune 0.11.0 compilation including both distribution files | 38 files compiled |
-| Lune behavioral/startup suite | 50 passed, 0 failed |
+| Lune 0.11.0 compilation including both distribution files | 41 files compiled |
+| Lune behavioral/startup/diagnostics suite | 64 passed, 0 failed; contract data and mocked services, not live gameplay |
 | Python dependency/build suite | 8 passed, 0 failed |
-| Deterministic distribution freshness | Passed; 24 embedded modules; both Lua deliverables identical |
+| Deterministic distribution freshness | Passed; 25 embedded modules; both Lua deliverables identical |
 | StyLua 2.6.0 formatting | Passed |
 | Rojo 7.7.1 demo build | Passed; `build/MohammadAndAli-Demo.rbxlx` |
 | Rojo 7.7.1 integration build | Passed; `build/MohammadAndAli-Integration.rbxlx` |
 | Rojo 7.7.1 standalone client build | Passed; `build/MohammadAndAli-Standalone.rbxlx` |
 | Standalone place XML inspection | Exactly 1 LocalScript, 0 ModuleScripts, 0 server Scripts |
-| Raw GitHub loader URL HEAD | HTTP 404; local files have not been published |
+| Earlier raw GitHub loader URL HEAD | HTTP 404 at the earlier check; superseded by the user's report that the loader now runs |
+
+## User-provided live evidence
+
+The user reports successful loader execution and a working custom GUI inside Anime Zero. The same session reports `Anime Zero integration is not configured`; none of its automation works. Auto Retry is also reported unresponsive. The user has only the running player client, with no developer APIs/source supplied. This is GUI-shell evidence only; the agent did not observe or control that session.
+
+The v1.1.0 changes were checked locally for immediate missing-binding refusal with zero recovery attempts, per-feature binding requirements, permanent block handling, Kill Aura range/OFF/no-pursuit policy, replay once/new-run confirmation, missing-replay GUI feedback, and diagnostics exclusions/budgets/cancellation/read-error reporting/before-after comparisons. They do not verify any live game action. No new simulated dungeon was added as a substitute for the live integration.
 
 Tests cover target scope/priority/range/death/disappearance, invalid positions and game state, explicit area clear, pending waves, rubble discovery/destruction, all five areas in order, missing objectives, final completion, replay once/new-run/rejection/timeout, settings pauses, respawn, unexpected area entry, manual recovery, no-damage combat, emergency stop, movement stand-off/timeout/stuck/driver failure, and idempotent cleanup.
 
@@ -32,7 +38,7 @@ Python tests check all source dependencies/order, deterministic artifacts, match
 - GUI appearance, dragging, resizing/compact layout, desktop/touch/gamepad interactions, notifications, and actual engine bootstrap/duplicate behavior (headless lifecycle tests pass).
 - Demo server-session preference saving and reloading.
 - Multiplayer lane isolation and live character respawn timing.
-- Running the exact GitHub command in any external client host. The URL currently returns 404, and no such host has been exercised.
+- The agent has not run the exact GitHub command in a live client host. The user's earlier GUI load is recorded separately; the rebuilt v1.1.0 diagnostics and gameplay are not live-tested here.
 
 Luau compilation and Rojo packaging do not validate Roblox runtime properties, server/client timing, rendered appearance, or full Roblox static types. Perform the acceptance pass in SETUP.md to verify these behaviors.
 

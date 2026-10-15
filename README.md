@@ -6,9 +6,25 @@ An independent, modular Luau dungeon controller with a charcoal, cyan, and purpl
 
 **Anime Zero integration is not configured or verified.** The included Roblox Studio fixture and deterministic tests demonstrate the controller using mechanics owned by this project. No third-party loader or obfuscated implementation is used. Develop the modular source with Rojo, or distribute the self-contained client without VS Code or Rojo.
 
+## Live-game status and the missing-binding error (v1.1.0)
+
+The user reports that the loader and Mohammad & Ali GUI run in the real game. This verifies the GUI shell for that user's host, **not any combat, farming, rubble, progression or replay integration**. The agent has no connected Roblox player session and has not independently observed gameplay.
+
+The cause of `Anime Zero integration is not configured` is concrete: `src/Game/Integration.lua` returns `{}`. NPCDetector and RubbleDetector filter adapter snapshots; they do not know the game's object hierarchy. CombatController calls supplied bindings; it has no Anime Zero attack API. Auto Retry previously appeared unresponsive because its control was disabled when `requestReplay` was missing.
+
+Version 1.1.0 preserves the GUI and adds:
+
+- Immediate failure with exact missing binding names on Start/Manual Recovery; no recovery attempts for missing integration.
+- A binding status card and **Diagnostics** tab, including bounded read-only captures and before/after comparisons.
+- Explicit Auto Retry feedback when replay is unavailable, with navigation to Diagnostics. This fixes the dead-control behavior; it does **not** supply the game's replay action.
+- A Kill Aura preference and range-limited controller mode through the existing attack binding. With Auto Farm off it does not pursue NPCs; it remains blocked without the live snapshot and combat functions. Start Run is required.
+- A version warning for an older running GUI and an **Unload Script** action in Settings.
+
+Do not use candidate names/tags as verified scope or attack APIs. Follow [LIVE_OBSERVATIONS.md](docs/LIVE_OBSERVATIONS.md) to collect the actual player-client evidence needed next. No new demo or guessed remotes were added for this update.
+
 ## Single-file distribution and GitHub command
 
-`loader.lua` is a generated, readable client bundle containing all **24 modules**. It opens the GUI on startup, leaves automation idle, and does not download any other code or require installed ModuleScripts. Repeated execution reveals the existing GUI and reuses its controller. Concurrent initialization is rejected; failed construction rolls back partial resources.
+`loader.lua` is a generated, readable client bundle containing all **25 modules**. It opens the GUI on startup, leaves automation idle, and does not download any other code or require installed ModuleScripts. Repeated execution reveals the existing GUI and reuses its controller. Concurrent initialization is rejected; failed construction rolls back partial resources.
 
 After the file has been published to the accessible `main` branch, your requested command is:
 
@@ -20,7 +36,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Mohammed001200/anime-
 
 For a normal Studio/client installation in a place you control, create a **LocalScript in StarterPlayerScripts** and paste the complete contents of `dist/MohammadAndAli.client.lua` into it. That file is byte-for-byte identical to `loader.lua` and needs no loadstring, HTTP access, VS Code, Rojo, or ReplicatedStorage package at runtime. Actual Roblox execution and GUI rendering still require a Studio playtest. The standalone client does not install the demo server or supply Anime Zero bindings.
 
-The raw GitHub URL returned **HTTP 404 on 2026-10-15**. These files are prepared locally and **have not been pushed**, so the remote command is not yet available. Private repositories also need appropriate access; this loader does not embed credentials.
+An earlier raw-URL check returned HTTP 404; the user subsequently reported successful GUI loading in the live game. The v1.1.0 changes in this task are local and **have not been pushed**. Private repositories need appropriate access; this loader does not embed credentials.
 
 To rebuild after editing `src/` (Python 3.10+ and its standard library):
 
@@ -54,12 +70,12 @@ See [setup](docs/SETUP.md) for commands without Aftman and a Studio acceptance w
 | Five-area controller, scoped targeting, rubble, progression, completion | Yes | Deterministic five-area simulation passes |
 | Delayed spawns, despawn, respawn recovery, cancellation, replay, timeouts | Yes | Automated regression tests pass |
 | Native Humanoid movement and cancellable pathfinding | Yes | Compiles and packages; requires Studio navigation testing |
-| Six-tab UI, toggles, sliders, dropdowns, live status, notifications, drag, restore, emergency stop | Yes | Compiles and packages; requires Studio visual/input testing |
+| Custom UI with diagnostics, toggles, sliders, dropdowns, live status, notifications, drag, restore, emergency stop | Yes | Compiles and packages; requires Studio visual/input testing |
 | Studio demo server, per-player lanes, validated combat and replay | Yes | Builds successfully; actual Studio multiplayer playtest pending |
 | Preferences | Yes | Configuration round-trip tested; demo server-session storage needs Studio verification |
 | Anime Zero hierarchy, combat, rubble interaction, progression, replay | Blocked by missing verified game details | No live access or legitimate integration API has been supplied |
 
-Current automated result: **50 Luau tests and 8 Python build tests pass**, all **38 Luau files compile**, formatting passes, and all three Rojo projects build. Loader tests construct the actual UI code against mocked client services; they do not render it or execute Roblox services. See [validation details](docs/VALIDATION.md).
+Current automated result: **64 Luau tests and 8 Python build tests pass**, all **41 Luau files compile**, formatting passes, and all three Rojo projects build. Loader tests construct the actual UI code against mocked client services; they do not render it or execute Roblox services. See [validation details](docs/VALIDATION.md).
 
 ## Architecture
 
@@ -73,7 +89,7 @@ src/
   Game/                      Adapter contract, detectors, combat, Studio adapter, integration bindings
   Dungeon/                   Objective priority and area progression decisions
   Movement/                  Portable navigation policy and Roblox pathfinding driver
-  UI/                        Theme, components, notifications, six-tab window
+  UI/                        Theme, components, notifications, window and diagnostics
   Utils/                     Signals, cleanup, finite point geometry
 demo/Dungeon.server.lua     Studio-only authoritative five-area fixture
 tests/                      Dungeon, loader-startup, and dependency/build regressions

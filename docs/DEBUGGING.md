@@ -6,6 +6,9 @@ Turn on **Settings → Debug logging**, then inspect Studio Output. The logger r
 | --- | --- |
 | Waiting for Studio demo server | Use the default demo project with Play, and confirm the Studio-only server script is running |
 | Anime Zero integration is not configured | Supply verified bindings in Game/Integration.lua; the project has no guessed live integration |
+| Integration unavailable: missing snapshot, attack, breakRubble | The live binding table is empty/incomplete. Start stops immediately; recovery cannot create game APIs. Open Diagnostics |
+| Auto Retry unavailable / missing requestReplay | The unavailable control now explains the missing replay contract instead of silently ignoring clicks; collect completion and manual replay captures |
+| Kill Aura finds no in-range NPCs | Only living records in the verified dungeon/run/area are eligible. With Auto Farm off it does not pursue targets |
 | Waiting for wave or area-clear confirmation | Empty targets did not prove the area is clear; inspect `spawnPending` and authoritative `areaCleared` |
 | Enemies are outside target distance | Living current-area targets exist, but acquisition range excludes them |
 | Waiting for rubble, entrance, or completion state | Area is explicitly clear, but the next objective is unavailable; inspect cached progression evidence |
@@ -45,3 +48,9 @@ lune run tests/run.luau
 `tests/MockDungeon.lua` supplies a deterministic clock, target deaths, rubble, area entry, delayed waves, replay, and movement driver. It can freeze movement, suppress damage, remove entrances, reject replay, or throw combat errors. This fixture verifies decision/cancellation behavior without claiming engine navigation or replication works.
 
 `tests/MockClient.lua` constructs the actual bundled GUI code against mocked services/events. Loader tests check GUI startup, one heartbeat across independent bundle copies, construction rollback/retry, concurrent startup, missing client/player/GUI, and teardown. They do not render the GUI or verify Roblox engine behavior. A raw URL 404 or missing host HttpGet/loadstring occurs before the bundle can run; see DISTRIBUTION.md.
+
+## Live observations
+
+Open **Diagnostics**, choose a phase, and capture before/after a normal manual attack, rubble break, checkpoint entry and Replay. Copy the report or print the last capture to the console. The scan is bounded, cancellable and read-only; it performs no combat/interaction and does not inspect script source or call remotes. Captures identify only candidate objects and sampled state, with scope unverified. Follow [LIVE_OBSERVATIONS.md](LIVE_OBSERVATIONS.md) for exactly which evidence is missing.
+
+If Diagnostics is absent or Credits still shows 1.0.0, the old GUI is still running. Repeated loads reveal that session. Rejoin or unload it before loading the rebuilt 1.1.0. New versions have Settings → Unload Script; hiding/minimizing is not unloading.

@@ -5,6 +5,8 @@ local suites = {
 	require("./Progression.spec"),
 	require("./Movement.spec"),
 	require("./Loader.spec"),
+	require("./Integration.spec"),
+	require("./Diagnostics.spec"),
 }
 for _, suite in suites do
 	suite(Test)

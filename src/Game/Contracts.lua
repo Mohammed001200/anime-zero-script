@@ -13,6 +13,7 @@ export type Target = {
 export type Entrance = { id: string, dungeonId: string, runId: string, area: number, position: Point }
 export type Snapshot = {
 	ready: boolean,
+	blocked: boolean?,
 	reason: string?,
 	dungeonId: string,
 	runId: string,
@@ -29,6 +30,7 @@ export type Snapshot = {
 	nextEntrance: Entrance?,
 }
 export type Capabilities = {
+	snapshot: boolean?,
 	attack: boolean,
 	breakRubble: boolean,
 	replay: boolean,

@@ -4,6 +4,23 @@
 
 No Anime Zero hierarchy or live mechanics have been inspected in this session. `AnimeZeroAdapter.lua` is a binding host with capability detection, not a claim of live support. `Integration.lua` has an empty binding table deliberately. The Studio adapter is a working reference for this project's own fixture only.
 
+The user has now observed the loader/GUI working in the live game and has only player-client access. No actual target, progression, combat or replay contract has been provided. Use Diagnostics and [LIVE_OBSERVATIONS.md](LIVE_OBSERVATIONS.md) to collect real observations. The diagnostic candidates are not runtime targets and are never promoted into bindings automatically.
+
+## Audit of the reported failure
+
+| Code | Actual responsibility / live gap |
+| --- | --- |
+| `Integration.lua` | Empty table; supplies no game snapshot or actions |
+| `AnimeZeroAdapter` | Detects supplied functions, now reports exact missing names and preflights enabled features |
+| `NPCDetector` | Chooses living, scoped snapshot records; does not discover Anime Zero's world hierarchy |
+| `CombatController` | Rate-limits/revalidates calls to `attack`/`breakRubble`; has no built-in Anime Zero attack API |
+| `RubbleDetector` | Selects active scoped barrier records; requires confirmed identity and health/progress data |
+| `AreaDetector` / progression | Need explicit area/run/wave/clear/completion/entrance state; empty enemies are insufficient |
+| `MovementController` | Navigates to supplied points, with stand-off/stuck/timeout/cancellation; cannot infer the correct area destination |
+| Auto Retry control | Previously disabled silently by `capabilities.replay == false`; now explains missing `requestReplay` and opens Diagnostics |
+
+`preflight(config)` refuses Start without functions needed by enabled features: `snapshot` always, `attack` for Auto Farm/Kill Aura, `breakRubble` for automatic rubble, and `requestReplay` for Auto Retry. This checks presence, not live correctness. A supplied function is not automatically a verified game API. Missing bindings stop with ERROR and zero recovery attempts. A known permanent runtime blockage may return `ready = false, blocked = true, reason = ...`; transient replication/spawn waits should not set `blocked`.
+
 Do not derive game authority from UI text such as “Break the rubble!”, object name guesses, missing replicated enemies, or a distance label. These may help locate evidence during an authorized inspection, but they are not authoritative progress/completion signals.
 
 ## First integration step

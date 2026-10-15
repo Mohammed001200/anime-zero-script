@@ -5,6 +5,7 @@ local Components = require(script.Parent.Components)
 local Theme = require(script.Parent.Theme)
 local Notifications = require(script.Parent.Notifications)
 local Cleanup = require(script.Parent.Parent.Utils.Cleanup)
+local IntegrationDiagnostics = require(script.Parent.Parent.Game.IntegrationDiagnostics)
 local MainWindow = {}
 MainWindow.__index = MainWindow
 
@@ -84,6 +85,7 @@ function MainWindow.new(controller, config, adapter, logger, mode, playerGui, co
 		{ "Dungeon", "▦" },
 		{ "Movement", "↗" },
 		{ "Settings", "≡" },
+		{ "Diagnostics", "?" },
 		{ "Credits", "◇" },
 	}
 	self.navEntries = entries
@@ -239,6 +241,7 @@ function MainWindow.new(controller, config, adapter, logger, mode, playerGui, co
 	self:_dungeon()
 	self:_movement()
 	self:_settings()
+	self:_diagnostics()
 	self:_credits()
 	self.cleanup:Add(config.Changed:Connect(function(values)
 		self:_refreshPreferences(values)
@@ -264,14 +267,36 @@ function MainWindow:_bind(key, control)
 end
 
 function MainWindow:_toggle(page, key, title, description, supported)
+	if key == "autoRetry" and supported == false then
+		description = "Unavailable: missing requestReplay binding. Click for details."
+	end
 	return self:_bind(
 		key,
-		Components.toggle(page, title, description, function(value)
-			local ok, err = self.config:Set(key, value)
-			if not ok then
-				self.notifications:Show(err, true)
-			end
-		end, self.cleanup, supported)
+		Components.toggle(
+			page,
+			title,
+			description,
+			function(value)
+				local ok, err = self.config:Set(key, value)
+				if not ok then
+					self.notifications:Show(err, true)
+				end
+			end,
+			self.cleanup,
+			supported,
+			if supported == false
+				then function()
+					local message = if key == "autoRetry"
+						then "Auto Retry cannot run: requestReplay is missing, and completion/new-run state must be confirmed. Open Diagnostics."
+						else title .. " is unavailable with the current adapter."
+					self.notifications:Show(message, true)
+					if key == "autoRetry" then
+						self.config:Set("autoRetry", false)
+						self:SelectTab("Diagnostics")
+					end
+				end
+				else nil
+		)
 	)
 end
 
@@ -370,6 +395,10 @@ function MainWindow:_dashboard()
 		}
 	)
 	self:_progress(page)
+	Components.note(page, self:_integrationSummary(), 88)
+	Components.button(page, "VIEW INTEGRATION DIAGNOSTICS", function()
+		self:SelectTab("Diagnostics")
+	end, self.cleanup, { Size = UDim2.new(1, -2, 0, 38), TextColor3 = Theme.cyan })
 	local grid = Components.card(page, 186)
 	local fields = {
 		{ "area", "CURRENT AREA" },
@@ -409,6 +438,14 @@ function MainWindow:_dashboard()
 	self:_toggle(page, "autoFarm", "Auto Farm", "Farm living enemies in the active area")
 	self:_toggle(
 		page,
+		"killAura",
+		"Kill Aura",
+		if self.adapter.capabilities.attack
+			then "Nearby attacks; Start Run required. Turn Auto Farm off for no NPC pursuit."
+			else "Blocked until snapshot + attack bindings are supplied. See Diagnostics."
+	)
+	self:_toggle(
+		page,
 		"autoBreakRubble",
 		"Auto Break Rubble",
 		"Clear the barrier after the area is confirmed clear"
@@ -425,6 +462,14 @@ end
 
 function MainWindow:_farm()
 	local page = self.pages["Auto Farm"]
+	self:_toggle(
+		page,
+		"killAura",
+		"Kill Aura",
+		if self.adapter.capabilities.attack
+			then "Nearby attacks through the combat binding. Start Run required."
+			else "Blocked until snapshot + attack bindings are supplied. See Diagnostics."
+	)
 	self:_toggle(page, "autoFarm", "NPC farming", "Pause or resume enemy targeting and combat")
 	self:_dropdown(
 		page,
@@ -582,6 +627,10 @@ function MainWindow:_settings()
 	Components.button(page, "MINIMIZE", function()
 		self:SetMinimized(true)
 	end, self.cleanup, { Size = UDim2.new(1, -2, 0, 40) })
+	Components.button(page, "UNLOAD SCRIPT (STOP AND CLOSE)", function()
+		self.controller:Stop("Script unloaded")
+		self.screen:Destroy()
+	end, self.cleanup, { Size = UDim2.new(1, -2, 0, 40), TextColor3 = Theme.danger })
 	Components.button(page, "SAVE PREFERENCES", function()
 		local ok, accepted, message = pcall(function()
 			return self.adapter:savePreferences(self.config:Export())
@@ -636,6 +685,138 @@ function MainWindow:_credits()
 		"Live Anime Zero compatibility has not been verified. The included five-area dungeon is a developer-owned Studio fixture. See docs/GAME_INTEGRATION.md before connecting game mechanics.",
 		82
 	)
+end
+
+function MainWindow:_integrationSummary()
+	if self.adapter.integrationStatus then
+		local status = self.adapter:integrationStatus()
+		return status.summary
+			.. "\n"
+			.. status.replay
+			.. "\nCandidate discovery does not supply combat or progression authority."
+	end
+	return "Controlled Studio adapter. This is not a live Anime Zero integration."
+end
+
+function MainWindow:_diagnostics()
+	local page = self.pages.Diagnostics
+	self.diagnostics = IntegrationDiagnostics.new(Players.LocalPlayer)
+	self.cleanup:Add(self.diagnostics)
+	Components.note(page, self:_integrationSummary(), 96)
+	Components.note(
+		page,
+		"Capture before and after a manual attack, rubble break, area entry, and Replay click. Reports stay on this client. They list observations, not confirmed game bindings.",
+		76
+	)
+	self.capturePhase = "Before manual attack"
+	local phases = {
+		"Before manual attack",
+		"After manual attack",
+		"Area cleared / rubble",
+		"After manual rubble break",
+		"Next area entered",
+		"Dungeon complete",
+		"After manual Replay",
+	}
+	local chooser
+	chooser = Components.dropdown(
+		page,
+		"Observation phase",
+		"Label the action you perform manually",
+		phases,
+		function(value)
+			self.capturePhase = value
+			chooser:Set(value)
+		end,
+		self.cleanup
+	)
+	Components.button(page, "CAPTURE READ-ONLY DIAGNOSTICS", function()
+		self:_captureDiagnostics()
+	end, self.cleanup, { Size = UDim2.new(1, -2, 0, 40), TextColor3 = Theme.cyan })
+	Components.button(page, "CANCEL CAPTURE", function()
+		self.diagnostics:Cancel()
+		self.captureStatus.Text = "Capture cancellation requested. No game actions were performed."
+	end, self.cleanup, { Size = UDim2.new(1, -2, 0, 34) })
+	Components.button(page, "PRINT LAST CAPTURE TO CONSOLE", function()
+		if not self.lastCaptureText then
+			self.notifications:Show("Capture diagnostics first", true)
+			return
+		end
+		print("[Mohammad & Ali] DIAGNOSTICS BEGIN")
+		for index = 1, #self.lastCaptureText, 2500 do
+			print(string.sub(self.lastCaptureText, index, index + 2499))
+		end
+		print("[Mohammad & Ali] DIAGNOSTICS END")
+	end, self.cleanup, { Size = UDim2.new(1, -2, 0, 34) })
+	local status = Components.note(
+		page,
+		"Not captured. Scan limit: 4,000 objects / 3 seconds. Missing streamed objects do not prove death or area clear.",
+		66
+	)
+	self.captureStatus = status:FindFirstChildOfClass("TextLabel")
+	local viewer = Components.create("ScrollingFrame", {
+		Size = UDim2.new(1, -2, 0, 280),
+		BackgroundColor3 = Theme.sidebar,
+		BorderSizePixel = 0,
+		ScrollBarThickness = 5,
+		CanvasSize = UDim2.fromOffset(1200, 280),
+		ScrollingDirection = Enum.ScrollingDirection.XY,
+	}, page)
+	Components.corner(viewer, 8)
+	self.reportBox = Components.create("TextBox", {
+		Name = "DiagnosticsReport",
+		MultiLine = true,
+		TextEditable = false,
+		ClearTextOnFocus = false,
+		Text = "No capture yet.",
+		Font = Enum.Font.Code,
+		TextSize = 11,
+		TextColor3 = Theme.text,
+		TextXAlignment = Enum.TextXAlignment.Left,
+		TextYAlignment = Enum.TextYAlignment.Top,
+		TextWrapped = true,
+		BackgroundTransparency = 1,
+		Position = UDim2.fromOffset(12, 12),
+		Size = UDim2.fromOffset(1176, 256),
+	}, viewer)
+	self.reportViewer = viewer
+end
+
+function MainWindow:_captureDiagnostics()
+	if self.captureRunning then
+		self.notifications:Show("A diagnostics capture is already running", true)
+		return
+	end
+	self.captureRunning = true
+	self.captureStatus.Text = "Capturing read-only evidence; play normally. Nothing is attacked or activated."
+	task.spawn(function()
+		local ok, report, problem = pcall(function()
+			return self.diagnostics:Collect(self.capturePhase, self.adapter, self.screen)
+		end)
+		self.captureRunning = false
+		if self.destroyed then
+			return
+		end
+		if not ok or not report then
+			self.captureStatus.Text = "Capture stopped: " .. tostring(if ok then problem else report)
+			return
+		end
+		self.lastCaptureText = IntegrationDiagnostics.Format(report, self.previousCapture)
+		self.previousCapture = report
+		self.reportBox.Text = self.lastCaptureText
+		local lines = 0
+		for line in string.gmatch(self.lastCaptureText .. "\n", "(.-)\n") do
+			lines += math.max(1, math.ceil(#line / 170))
+		end
+		local height = math.max(256, lines * 16)
+		self.reportBox.Size, self.reportViewer.CanvasSize =
+			UDim2.fromOffset(1176, height), UDim2.fromOffset(1200, height + 24)
+		self.captureStatus.Text = string.format(
+			"Captured %d objects. Truncated: %s. Copy the report or print it to console. Candidate objects are NOT game bindings.",
+			report.visited,
+			tostring(report.truncated)
+		)
+	end)
 end
 
 function MainWindow:_refreshPreferences(values)
@@ -724,7 +905,12 @@ function MainWindow:_interaction(header)
 		self.navLayout.Padding = UDim.new(0, if compact then 4 else 8)
 		for _, entry in self.navEntries do
 			local button = self.tabs[entry[1]]
-			button.Size = if compact then UDim2.fromOffset(87, 38) else UDim2.new(1, 0, 0, 42)
+			button.Size = if compact
+				then UDim2.fromOffset(
+					math.floor((width - 36 - 4 * (#self.navEntries - 1)) / #self.navEntries),
+					38
+				)
+				else UDim2.new(1, 0, 0, 42)
 			button.Text = if compact then entry[1] else entry[2] .. "   " .. entry[1]
 			button.TextSize = if compact then 11 else 13
 			button.TextXAlignment = if compact then Enum.TextXAlignment.Center else Enum.TextXAlignment.Left

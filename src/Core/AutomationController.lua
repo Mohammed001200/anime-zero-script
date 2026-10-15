@@ -83,12 +83,32 @@ function AutomationController:Start()
 	if self.enabled then
 		return true
 	end
+	self.attempts = 0
+	local available, problem = self:_preflight()
+	if not available then
+		self:_fail(problem)
+		self:_publish()
+		return false, problem
+	end
 	self.enabled, self.attempts = true, 0
 	self.waitKey, self.completedRun, self.scope, self.retryAt, self.targetId = nil, nil, nil, nil, nil
 	self.status.lastError = "None"
 	self.machine:Set("FIND_NPCS", "Automation started")
 	self:_publish()
 	return true
+end
+
+function AutomationController:_preflight()
+	if not self.adapter.preflight then
+		return true
+	end
+	local ok, available, problem = pcall(function()
+		return self.adapter:preflight(self.config:Get())
+	end)
+	if not ok then
+		return false, "Integration preflight failed: " .. tostring(available)
+	end
+	return available, problem or "Game bindings unavailable"
 end
 
 function AutomationController:Stop(reason)
@@ -103,7 +123,9 @@ function AutomationController:Recover()
 		return
 	end
 	self:Stop("Manual recovery")
-	self:Start()
+	if not self:Start() then
+		return
+	end
 	self.machine:Set("RECOVERING", "Rechecking the current area")
 	self:_publish()
 end
@@ -178,6 +200,10 @@ function AutomationController:_step(snapshot, now)
 	local config = self.config:Get()
 	local valid, problem = AreaDetector.validate(snapshot)
 	if not valid then
+		if type(snapshot) == "table" and snapshot.blocked == true then
+			self:_fail(problem)
+			return
+		end
 		self:_wait("invalid", "RECOVERING", problem, now, config, true)
 		return
 	end
@@ -219,16 +245,32 @@ function AutomationController:_step(snapshot, now)
 		then string.format("Active · %.0f HP", inspection.rubble.health)
 		else "No active barrier"
 	if inspection.objective == "NPCs" then
-		if not config.autoFarm then
+		if not config.autoFarm and not config.killAura then
 			self:_wait("pausedNPC", "FIND_NPCS", "NPC farming is paused", now, config, false)
 			return
 		end
 		local refresh = now - self.lastRefresh >= config.targetRefreshInterval
-		local target = NPCDetector.select(snapshot, config, self.targetId, refresh)
+		local targeting = config
+		if config.killAura and not config.autoFarm then
+			targeting = table.clone(config)
+			targeting.maxTargetDistance = config.attackRange
+		end
+		local target = NPCDetector.select(snapshot, targeting, self.targetId, refresh)
 		if refresh then
 			self.lastRefresh = now
 		end
 		if not target then
+			if config.killAura and not config.autoFarm then
+				self:_wait(
+					"auraRange",
+					"FIND_NPCS",
+					"Kill Aura: waiting for a living NPC within attack range",
+					now,
+					config,
+					false
+				)
+				return
+			end
 			self:_wait("outOfRange", "FIND_NPCS", "Enemies are outside target distance", now, config, true)
 			return
 		end
@@ -238,7 +280,21 @@ function AutomationController:_step(snapshot, now)
 			self.logger:Log("DEBUG", "NPC target acquired", target.id)
 		end
 		self.targetId, self.status.target = target.id, target.name or target.id
-		local result = self:_move(target, snapshot, now, config, config.followDistance, "MOVE_TO_NPC")
+		local result
+		if config.killAura and not config.autoFarm then
+			self.movement:Cancel()
+			self.status.destination = "None (Kill Aura does not pursue NPCs)"
+			result = "arrived"
+		else
+			result = self:_move(
+				target,
+				snapshot,
+				now,
+				config,
+				if config.killAura then config.attackRange else config.followDistance,
+				"MOVE_TO_NPC"
+			)
+		end
 		if result == "arrived" then
 			self.machine:Set("ATTACK_NPCS", self.status.target)
 			local ok, err = self.combat:Attack("NPC", target, snapshot, now, config)
@@ -331,6 +387,11 @@ function AutomationController:Tick(now)
 		return
 	end
 	local ok, err = xpcall(function()
+		local available, problem = self:_preflight()
+		if not available then
+			self:_fail(problem)
+			return
+		end
 		self:_step(self.adapter:snapshot(), now)
 	end, debug.traceback)
 	if not ok then

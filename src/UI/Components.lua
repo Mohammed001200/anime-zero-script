@@ -127,12 +127,14 @@ local function row(parent, title, description, height)
 	return frame
 end
 
-function Components.toggle(parent, title, description, callback, cleanup, supported)
+function Components.toggle(parent, title, description, callback, cleanup, supported, onUnavailable)
 	local frame = row(parent, title, description)
 	local enabled, value = supported ~= false, false
 	local track = Components.button(frame, "", function()
 		if enabled then
 			callback(not value)
+		elseif onUnavailable then
+			onUnavailable()
 		end
 	end, cleanup, { Size = UDim2.fromOffset(48, 26), Position = UDim2.new(1, -66, 0, 20) })
 	track:FindFirstChildOfClass("UICorner").CornerRadius = UDim.new(0, 20)
@@ -143,7 +145,7 @@ function Components.toggle(parent, title, description, callback, cleanup, suppor
 		BorderSizePixel = 0,
 	}, track)
 	Components.corner(knob, 20)
-	track.Active, track.Selectable = enabled, enabled
+	track.Active, track.Selectable = enabled or onUnavailable ~= nil, enabled or onUnavailable ~= nil
 	track.BackgroundTransparency = if enabled then 0 else 0.55
 	return {
 		Set = function(_, nextValue)

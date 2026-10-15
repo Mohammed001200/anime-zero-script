@@ -68,10 +68,34 @@ function MockClient.new()
 		return self
 	end
 	function methods:IsA(class)
-		return self.ClassName == class or class == "Instance"
+		return self.ClassName == class
+			or class == "Instance"
+			or (self.ClassName == "Part" and class == "BasePart")
+			or (
+				(
+					self.ClassName == "NumberValue"
+					or self.ClassName == "IntValue"
+					or self.ClassName == "StringValue"
+					or self.ClassName == "BoolValue"
+				) and class == "ValueBase"
+			)
 	end
 	function methods:GetChildren()
 		return table.clone(self.children)
+	end
+	function methods:GetFullName()
+		return if self.Parent then self.Parent:GetFullName() .. "." .. self.Name else self.Name
+	end
+	function methods:GetAttributes()
+		return table.clone(self.attributes)
+	end
+	function methods:FindFirstChildWhichIsA(class)
+		for _, child in self.children do
+			if child:IsA(class) then
+				return child
+			end
+		end
+		return nil
 	end
 	function methods:FindFirstChild(name)
 		for _, child in self.children do
@@ -138,6 +162,7 @@ function MockClient.new()
 			"TweenService",
 			"UserInputService",
 			"Workspace",
+			"CollectionService",
 		}
 	do
 		services[name] = instance(name)
@@ -152,6 +177,12 @@ function MockClient.new()
 	local playerGui = instance("PlayerGui")
 	playerGui.Parent = player
 	services.Players.LocalPlayer = player
+	function services.Players:GetPlayers()
+		return host.players or { self.LocalPlayer }
+	end
+	function services.CollectionService:GetTags(object)
+		return object.MockTags or {}
+	end
 	local camera = instance("Camera")
 	camera.ViewportSize = Roblox.Vector2.new(1280, 800)
 	services.Workspace.CurrentCamera = camera
@@ -171,7 +202,7 @@ function MockClient.new()
 			end,
 		}
 	end
-	local fakeGame = {}
+	local fakeGame = { PlaceId = 12345, GameId = 67890 }
 	function fakeGame:GetService(name)
 		assert(services[name], "Mock service missing: " .. name)
 		return services[name]
@@ -193,6 +224,10 @@ function MockClient.new()
 			end,
 		},
 		task = {
+			spawn = function(callback)
+				callback()
+			end,
+			wait = function() end,
 			delay = function(_, callback)
 				table.insert(host.delayed, callback)
 			end,

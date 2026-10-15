@@ -1,5 +1,5 @@
 {
-  "bundleSha256": "263e22209a87bf1b7bfd6df770cb0ca6010299ef6a1538e6c2b4e3cb1557eea3",
+  "bundleSha256": "de0117f129571e158353f22a0a0cf855b75194d3e50fd4dd44cd551b4d79acc7",
   "dependencyOrder": [
     "Utils/Signal",
     "Core/StateMachine",
@@ -18,6 +18,7 @@
     "Game/StudioDemoAdapter",
     "Movement/MovementController",
     "Movement/RobloxMovementDriver",
+    "Game/IntegrationDiagnostics",
     "UI/Theme",
     "UI/Components",
     "UI/Notifications",
@@ -34,7 +35,7 @@
     "main.client.lua"
   ],
   "format": 1,
-  "moduleCount": 24,
+  "moduleCount": 25,
   "modules": {
     "Bootstrap": {
       "dependencies": [
@@ -47,10 +48,11 @@
         "Movement/MovementController",
         "Movement/RobloxMovementDriver",
         "UI/MainWindow",
+        "UI/Theme",
         "Utils/Cleanup"
       ],
       "source": "src/Bootstrap.lua",
-      "sourceSha256": "765eba750372e5c0e5e14658a9932989f950905f8c37efe7f678c84e03dd1e93"
+      "sourceSha256": "bf154807e3cdd3ceeb1f8efb84bab15a0ed1257b6c9f4f1fe45a296c4274cc59"
     },
     "Core/AutomationController": {
       "dependencies": [
@@ -62,7 +64,7 @@
         "Utils/Signal"
       ],
       "source": "src/Core/AutomationController.lua",
-      "sourceSha256": "83ebc80b5c45ec98e162d3cbb3979e34392b85b8a9ea645d6a1ee92f61fa46f3"
+      "sourceSha256": "346662c2af84eb034832128b931d3b945f1f2c2266f7ab3e5e81c0c5f9fa1db4"
     },
     "Core/Configuration": {
       "dependencies": [
@@ -70,7 +72,7 @@
         "Utils/Signal"
       ],
       "source": "src/Core/Configuration.lua",
-      "sourceSha256": "adf2b4f0e4e6d8a42366c89b39b0d9523de0a5612a4bbd5e4cc7c96893e55e72"
+      "sourceSha256": "2319e192349ebe4ec55d520d7815506a0f87a7f0ad822f5374a54a1aa33668b6"
     },
     "Core/Logger": {
       "dependencies": [
@@ -105,7 +107,7 @@
     "Game/AnimeZeroAdapter": {
       "dependencies": [],
       "source": "src/Game/AnimeZeroAdapter.lua",
-      "sourceSha256": "50bd62eb85a864d2f60cc800e2a6058159bb41d5bfc573dcb8bb2f8c58023edf"
+      "sourceSha256": "d2c756825b1c3aca4ce93db84ed66064881c1ae304a759d3537ea6413af9dfb9"
     },
     "Game/AreaDetector": {
       "dependencies": [
@@ -125,12 +127,17 @@
     "Game/Contracts": {
       "dependencies": [],
       "source": "src/Game/Contracts.lua",
-      "sourceSha256": "28f2caa341ac5ae31bf38bfbf4b869d6d0fe29e4a602384d0da2935b88f03773"
+      "sourceSha256": "40f7f80137ffbe82197e44968839cea0c69acc4b7e22c0a5b6f6eb394992b0e0"
     },
     "Game/Integration": {
       "dependencies": [],
       "source": "src/Game/Integration.lua",
-      "sourceSha256": "6c009ba2dc44fbb390bfac990d71baf47486af88ce996c53bc8e43738be5b799"
+      "sourceSha256": "f3d835f4137bb988d91be0ec1e7d387ee673954ed486f5e7a3f15fa24f86959d"
+    },
+    "Game/IntegrationDiagnostics": {
+      "dependencies": [],
+      "source": "src/Game/IntegrationDiagnostics.lua",
+      "sourceSha256": "36dee5adf32f4b3b820ee27fdf8c28d9f4c25769480ebae8840a7cdfeb004c4a"
     },
     "Game/NPCDetector": {
       "dependencies": [
@@ -169,17 +176,18 @@
         "UI/Theme"
       ],
       "source": "src/UI/Components.lua",
-      "sourceSha256": "fde842f49a6c4e6426acb1c62c24cfa0f7e3fb99aed44a40c063c139a3cbeb9a"
+      "sourceSha256": "afc770cf4014462570f60e0151e26a0f64a24615f370d670c21009da276abe06"
     },
     "UI/MainWindow": {
       "dependencies": [
+        "Game/IntegrationDiagnostics",
         "UI/Components",
         "UI/Notifications",
         "UI/Theme",
         "Utils/Cleanup"
       ],
       "source": "src/UI/MainWindow.lua",
-      "sourceSha256": "2f9a5668b7339a326f0dafe7e7b5555c527dfbdaddf08471f0c6348ba1012b4d"
+      "sourceSha256": "dff752b4acf285e43104ea045fa6a3dcb0f6d414e46e2c77595b59fa2405ab93"
     },
     "UI/Notifications": {
       "dependencies": [
@@ -192,7 +200,7 @@
     "UI/Theme": {
       "dependencies": [],
       "source": "src/UI/Theme.lua",
-      "sourceSha256": "5c29866ba8f3e1045d4558d331e27c97ea823c81dee249f34766dc45c4158ee9"
+      "sourceSha256": "55696f3b446118c0e40bdaf32e5160b8f3dbb9cd8414d29fada07f7a8224fa37"
     },
     "Utils/Cleanup": {
       "dependencies": [],
@@ -210,5 +218,5 @@
       "sourceSha256": "698b9ce568bc0fdb3fa7732b362c2176c2cfb1860e5eb155f3e25aa8e68ed7fb"
     }
   },
-  "sourceFingerprint": "ed147f4a50ca2e91b90a3b4921f9db6e5953b5626cb2202ebf3927fbe667e1b6"
+  "sourceFingerprint": "5db39352d8a11cf71eb07ce06406bcc0226bb143c3e0caabfb3a324347e9cc67"
 }
