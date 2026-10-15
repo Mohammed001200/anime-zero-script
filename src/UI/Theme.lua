@@ -1,0 +1,16 @@
+return table.freeze({
+	background = Color3.fromRGB(10, 14, 23),
+	sidebar = Color3.fromRGB(13, 18, 29),
+	surface = Color3.fromRGB(19, 26, 40),
+	raised = Color3.fromRGB(27, 36, 52),
+	border = Color3.fromRGB(39, 52, 70),
+	text = Color3.fromRGB(234, 242, 250),
+	muted = Color3.fromRGB(137, 155, 179),
+	cyan = Color3.fromRGB(51, 222, 238),
+	purple = Color3.fromRGB(162, 122, 255),
+	danger = Color3.fromRGB(255, 104, 132),
+	green = Color3.fromRGB(93, 227, 165),
+	font = Enum.Font.Gotham,
+	bold = Enum.Font.GothamBold,
+	version = "1.0.0",
+})

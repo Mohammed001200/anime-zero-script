@@ -147,3 +147,19 @@ vite.config.ts.timestamp-*
 
 # Turbo Repo
 .turbo
+
+# Roblox / local Luau tools
+.tools/
+build/
+*.rbxl
+*.rbxlx
+*.rbxm
+*.rbxmx
+.DS_Store
+
+# Reviewable distribution is versioned for raw GitHub loading.
+!dist/
+dist/*
+!dist/MohammadAndAli.client.lua
+!dist/manifest.json
+__pycache__/

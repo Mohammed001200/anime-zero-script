@@ -1,0 +1,11 @@
+{
+  "name": "Mohammad and Ali Script - Standalone Client",
+  "tree": {
+    "$className": "DataModel",
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "MohammadAndAli": { "$path": "dist/MohammadAndAli.client.lua" }
+      }
+    }
+  }
+}

@@ -1,0 +1,41 @@
+# Validation record
+
+Date: **2026-10-15** (Europe/Stockholm)
+
+## Executed locally
+
+| Check | Result |
+| --- | --- |
+| Lune 0.11.0 compilation including both distribution files | 38 files compiled |
+| Lune behavioral/startup suite | 50 passed, 0 failed |
+| Python dependency/build suite | 8 passed, 0 failed |
+| Deterministic distribution freshness | Passed; 24 embedded modules; both Lua deliverables identical |
+| StyLua 2.6.0 formatting | Passed |
+| Rojo 7.7.1 demo build | Passed; `build/MohammadAndAli-Demo.rbxlx` |
+| Rojo 7.7.1 integration build | Passed; `build/MohammadAndAli-Integration.rbxlx` |
+| Rojo 7.7.1 standalone client build | Passed; `build/MohammadAndAli-Standalone.rbxlx` |
+| Standalone place XML inspection | Exactly 1 LocalScript, 0 ModuleScripts, 0 server Scripts |
+| Raw GitHub loader URL HEAD | HTTP 404; local files have not been published |
+
+Tests cover target scope/priority/range/death/disappearance, invalid positions and game state, explicit area clear, pending waves, rubble discovery/destruction, all five areas in order, missing objectives, final completion, replay once/new-run/rejection/timeout, settings pauses, respawn, unexpected area entry, manual recovery, no-damage combat, emergency stop, movement stand-off/timeout/stuck/driver failure, and idempotent cleanup.
+
+The standalone five-area fixture uses one enemy per wave to keep assertions compact; the Studio fixture creates three NPCs per area. Both use four barriers followed by explicit final completion.
+
+Loader tests execute the complete generated `loader.lua` with actual project modules and mocked client services. They verify that GUI objects are constructed and shown without native require, script instances, loadstring or HTTP inside the bundle; independent loads share one GUI and heartbeat; construction failure cleans partial resources and permits retry; simultaneous loads are rejected; server/missing-player/missing-GUI/plain-runtime errors are explicit; and GUI/marker destruction unloads the session.
+
+Python tests check all source dependencies/order, deterministic artifacts, matching distribution files, handling comments/strings, missing modules/entry, duplicate keys, cycles, unsupported dynamic requires, leftover script references, and Roblox/Lune path mismatch. This does not certify the builder for arbitrary Luau outside its documented supported syntax.
+
+## Implemented but not executed in Roblox
+
+- Actual Studio server/client fixture, request validation and replication.
+- Humanoid pathfinding, waypoint traversal, blocked paths, stand-off geometry, speed restoration, cancellation of in-flight ComputeAsync results.
+- GUI appearance, dragging, resizing/compact layout, desktop/touch/gamepad interactions, notifications, and actual engine bootstrap/duplicate behavior (headless lifecycle tests pass).
+- Demo server-session preference saving and reloading.
+- Multiplayer lane isolation and live character respawn timing.
+- Running the exact GitHub command in any external client host. The URL currently returns 404, and no such host has been exercised.
+
+Luau compilation and Rojo packaging do not validate Roblox runtime properties, server/client timing, rendered appearance, or full Roblox static types. Perform the acceptance pass in SETUP.md to verify these behaviors.
+
+## Blocked by missing game evidence
+
+All live Anime Zero integration: actual object hierarchy, active dungeon/run identity, NPC health, authoritative wave-clear state, rubble interaction, entrance availability, completion and replay. None has been inspected or tested. No live compatibility claim is made.

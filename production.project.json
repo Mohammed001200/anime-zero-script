@@ -1,0 +1,10 @@
+{
+  "name": "Mohammad and Ali Script - Integration",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": { "MohammadAndAli": { "$path": "src" } },
+    "StarterPlayer": {
+      "StarterPlayerScripts": { "MohammadAndAliClient": { "$path": "main.client.lua" } }
+    }
+  }
+}

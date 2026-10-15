@@ -1,0 +1,214 @@
+{
+  "bundleSha256": "263e22209a87bf1b7bfd6df770cb0ca6010299ef6a1538e6c2b4e3cb1557eea3",
+  "dependencyOrder": [
+    "Utils/Signal",
+    "Core/StateMachine",
+    "Utils/Geometry",
+    "Game/AreaDetector",
+    "Dungeon/ProgressionController",
+    "Game/NPCDetector",
+    "Game/RubbleDetector",
+    "Dungeon/DungeonController",
+    "Game/CombatController",
+    "Core/AutomationController",
+    "Core/Configuration",
+    "Core/Logger",
+    "Game/AnimeZeroAdapter",
+    "Game/Integration",
+    "Game/StudioDemoAdapter",
+    "Movement/MovementController",
+    "Movement/RobloxMovementDriver",
+    "UI/Theme",
+    "UI/Components",
+    "UI/Notifications",
+    "Utils/Cleanup",
+    "UI/MainWindow",
+    "Bootstrap",
+    "Game/Contracts"
+  ],
+  "entry": "Bootstrap",
+  "excluded": [
+    "demo/Dungeon.server.lua",
+    "tests/",
+    "scripts/",
+    "main.client.lua"
+  ],
+  "format": 1,
+  "moduleCount": 24,
+  "modules": {
+    "Bootstrap": {
+      "dependencies": [
+        "Core/AutomationController",
+        "Core/Configuration",
+        "Core/Logger",
+        "Game/AnimeZeroAdapter",
+        "Game/Integration",
+        "Game/StudioDemoAdapter",
+        "Movement/MovementController",
+        "Movement/RobloxMovementDriver",
+        "UI/MainWindow",
+        "Utils/Cleanup"
+      ],
+      "source": "src/Bootstrap.lua",
+      "sourceSha256": "765eba750372e5c0e5e14658a9932989f950905f8c37efe7f678c84e03dd1e93"
+    },
+    "Core/AutomationController": {
+      "dependencies": [
+        "Core/StateMachine",
+        "Dungeon/DungeonController",
+        "Game/AreaDetector",
+        "Game/CombatController",
+        "Game/NPCDetector",
+        "Utils/Signal"
+      ],
+      "source": "src/Core/AutomationController.lua",
+      "sourceSha256": "83ebc80b5c45ec98e162d3cbb3979e34392b85b8a9ea645d6a1ee92f61fa46f3"
+    },
+    "Core/Configuration": {
+      "dependencies": [
+        "Utils/Geometry",
+        "Utils/Signal"
+      ],
+      "source": "src/Core/Configuration.lua",
+      "sourceSha256": "adf2b4f0e4e6d8a42366c89b39b0d9523de0a5612a4bbd5e4cc7c96893e55e72"
+    },
+    "Core/Logger": {
+      "dependencies": [
+        "Utils/Signal"
+      ],
+      "source": "src/Core/Logger.lua",
+      "sourceSha256": "e3c6b7404357bfd13ee90f4b98a8d24d9878bd253090e2895d44e3b7f32fedb2"
+    },
+    "Core/StateMachine": {
+      "dependencies": [
+        "Utils/Signal"
+      ],
+      "source": "src/Core/StateMachine.lua",
+      "sourceSha256": "9deb4abc9f5c6c96ea3bb2ed8a837ea061586e7453a317c1545fc53759c90efc"
+    },
+    "Dungeon/DungeonController": {
+      "dependencies": [
+        "Dungeon/ProgressionController",
+        "Game/NPCDetector",
+        "Game/RubbleDetector"
+      ],
+      "source": "src/Dungeon/DungeonController.lua",
+      "sourceSha256": "2217f83d06e7a837575026983391ad3e209e786fab823b0c16a56e51e939bb4b"
+    },
+    "Dungeon/ProgressionController": {
+      "dependencies": [
+        "Game/AreaDetector"
+      ],
+      "source": "src/Dungeon/ProgressionController.lua",
+      "sourceSha256": "d5fecf6c863f1155f8340534644c10601cb0e89936ed92b52dca6222de3846fe"
+    },
+    "Game/AnimeZeroAdapter": {
+      "dependencies": [],
+      "source": "src/Game/AnimeZeroAdapter.lua",
+      "sourceSha256": "50bd62eb85a864d2f60cc800e2a6058159bb41d5bfc573dcb8bb2f8c58023edf"
+    },
+    "Game/AreaDetector": {
+      "dependencies": [
+        "Utils/Geometry"
+      ],
+      "source": "src/Game/AreaDetector.lua",
+      "sourceSha256": "e53eebb7689eadc0ba08625e859fec649571367951f4ae7363e81c005daf5ab5"
+    },
+    "Game/CombatController": {
+      "dependencies": [
+        "Game/NPCDetector",
+        "Utils/Geometry"
+      ],
+      "source": "src/Game/CombatController.lua",
+      "sourceSha256": "33e045469e236bc541b8b63eeb94b7d9d59aa13e4960a682cc7c7ebd5449a958"
+    },
+    "Game/Contracts": {
+      "dependencies": [],
+      "source": "src/Game/Contracts.lua",
+      "sourceSha256": "28f2caa341ac5ae31bf38bfbf4b869d6d0fe29e4a602384d0da2935b88f03773"
+    },
+    "Game/Integration": {
+      "dependencies": [],
+      "source": "src/Game/Integration.lua",
+      "sourceSha256": "6c009ba2dc44fbb390bfac990d71baf47486af88ce996c53bc8e43738be5b799"
+    },
+    "Game/NPCDetector": {
+      "dependencies": [
+        "Utils/Geometry"
+      ],
+      "source": "src/Game/NPCDetector.lua",
+      "sourceSha256": "0e453f738654eb4cb81c4c435e78ad0aefb7b8a592f451f08c3f7a798a42d0d6"
+    },
+    "Game/RubbleDetector": {
+      "dependencies": [
+        "Game/NPCDetector",
+        "Utils/Geometry"
+      ],
+      "source": "src/Game/RubbleDetector.lua",
+      "sourceSha256": "07ebbf3366273c369ff474d0212b1054de981d230203a68a84b89d44441cd188"
+    },
+    "Game/StudioDemoAdapter": {
+      "dependencies": [],
+      "source": "src/Game/StudioDemoAdapter.lua",
+      "sourceSha256": "97f70aea13d852ed67279098d92fac1d1844048aac38699cef8cda46ff760371"
+    },
+    "Movement/MovementController": {
+      "dependencies": [
+        "Utils/Geometry"
+      ],
+      "source": "src/Movement/MovementController.lua",
+      "sourceSha256": "52a5ceedb359a40245429fbbcab46bf431e8024b60f00f8501c6be83c67b6017"
+    },
+    "Movement/RobloxMovementDriver": {
+      "dependencies": [],
+      "source": "src/Movement/RobloxMovementDriver.lua",
+      "sourceSha256": "ef6d7e29b7508ed70225a4d86e903abf7e3faf7343abf5276c608f65c45411e3"
+    },
+    "UI/Components": {
+      "dependencies": [
+        "UI/Theme"
+      ],
+      "source": "src/UI/Components.lua",
+      "sourceSha256": "fde842f49a6c4e6426acb1c62c24cfa0f7e3fb99aed44a40c063c139a3cbeb9a"
+    },
+    "UI/MainWindow": {
+      "dependencies": [
+        "UI/Components",
+        "UI/Notifications",
+        "UI/Theme",
+        "Utils/Cleanup"
+      ],
+      "source": "src/UI/MainWindow.lua",
+      "sourceSha256": "2f9a5668b7339a326f0dafe7e7b5555c527dfbdaddf08471f0c6348ba1012b4d"
+    },
+    "UI/Notifications": {
+      "dependencies": [
+        "UI/Components",
+        "UI/Theme"
+      ],
+      "source": "src/UI/Notifications.lua",
+      "sourceSha256": "05d2189ee81a42f6c9c717b3e1a4481e3b366742674cd70a574e76def505715f"
+    },
+    "UI/Theme": {
+      "dependencies": [],
+      "source": "src/UI/Theme.lua",
+      "sourceSha256": "5c29866ba8f3e1045d4558d331e27c97ea823c81dee249f34766dc45c4158ee9"
+    },
+    "Utils/Cleanup": {
+      "dependencies": [],
+      "source": "src/Utils/Cleanup.lua",
+      "sourceSha256": "dc7d8de51a0d209603222a8fb22aa19ce99b5b1db6eb0713465443c123aa0304"
+    },
+    "Utils/Geometry": {
+      "dependencies": [],
+      "source": "src/Utils/Geometry.lua",
+      "sourceSha256": "e5506507c36f835ffea22201f3e2b46e96199f0cf48eae9171a074378d7f9c05"
+    },
+    "Utils/Signal": {
+      "dependencies": [],
+      "source": "src/Utils/Signal.lua",
+      "sourceSha256": "698b9ce568bc0fdb3fa7732b362c2176c2cfb1860e5eb155f3e25aa8e68ed7fb"
+    }
+  },
+  "sourceFingerprint": "ed147f4a50ca2e91b90a3b4921f9db6e5953b5626cb2202ebf3927fbe667e1b6"
+}
