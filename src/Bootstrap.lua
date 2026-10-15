@@ -120,6 +120,9 @@ function Bootstrap.start()
 		if bindings.inputTrial then
 			-- Ordinary Humanoid navigation; moving NPCs do not need speculative paths.
 			config:Set("movementMode", "MoveTo")
+			config:Set("followDistance", 3)
+			config:Set("targetRefreshInterval", 0.1)
+			config:Set("attackInterval", 0.15)
 		end
 		session.config = config
 		cleanup:Add(config)
@@ -148,7 +151,7 @@ function Bootstrap.start()
 			logger,
 			if getmetatable(adapter) == StudioDemoAdapter
 				then "STUDIO DEMO"
-				elseif bindings.inputTrial then "M1 INPUT TRIAL · LIVE DAMAGE UNVERIFIED"
+				elseif bindings.inputTrial then "M1 INPUT TRIAL · PROGRESSION NEEDS LIVE TEST"
 				elseif bindings.snapshot then "CUSTOM ADAPTER · VERIFY IN GAME"
 				else "VERIFIED ADAPTER REQUIRED",
 			playerGui,

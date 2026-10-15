@@ -2,7 +2,33 @@
 
 Date: **2026-10-15** (Europe/Stockholm)
 
-## Current input trial
+## Current input trial: 1.3.0-input-trial
+
+The user confirmed that published 1.2 Auto Farm moves to NPCs and fights them, but
+stalls before rubble with Last Error `None` and both progression toggles on. This
+is user-provided live combat evidence, not an agent-run test of the new build.
+The code's exact-zero-counter gate could explain that wait. New objective/next-area
+HUD observations and RubbleMaxHealth were also supplied by the user.
+
+The local update checks phase/HP/max-HP validation, player/asset exclusion, direct
+navigation tracking, stable target selection, repeated normal M1 pulses and a
+bounded geometric walk after border destruction. Public Sable inspection yielded
+a readable downloader and HTTP 403 from FlowAuth, not game source; nothing from
+that payload was executed or copied. See [SABLE_AUDIT.md](SABLE_AUDIT.md).
+
+Focused `tests/input.luau` checks pass, including the new HUD paths, stale-counter
+rubble transition and a complete NPC/rubble/opening/next-wave sequence using mocks.
+Compilation/formatting and bundle freshness are checked separately. This does not
+prove automatic rubble damage, the actual checkpoint route, all five real areas,
+Pulse cadence/damage, or replay. The full suite is not rerun.
+
+Executed local results for this revision: **53 focused checks passed**, **17
+changed/generated Luau files compiled**, changed-file formatting passed,
+deterministic bundle freshness passed, and Git whitespace checks passed. No actual
+Solara input, game navigation, rubble damage, or checkpoint activation was executed
+by the agent. The loader and standalone distribution were rebuilt together.
+
+## Prior input-trial verification: 1.2 (historical)
 
 The user supplied full-run and weaker-sword recordings plus a screenshot confirming
 that M1 press/release and window-focus functions exist in their Solara session.

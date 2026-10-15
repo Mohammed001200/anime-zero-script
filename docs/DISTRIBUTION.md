@@ -80,4 +80,4 @@ Review the diff for `src/Bootstrap.lua`, `src/UI/MainWindow.lua`, the bundler/te
 
 ## Remaining Anime Zero work
 
-`src/Game/Integration.lua` now supplies a place-scoped, guarded M1 input trial. See [INPUT_TRIAL.md](INPUT_TRIAL.md) for setup and the remaining HP/death, checkpoint and replay gaps. The trial has client-local observation identity, not a server run binding. Rebuild both distribution files after source changes, and verify actual input, movement and damage before claiming compatibility.
+`src/Game/Integration.lua` supplies a place-scoped, guarded M1 input trial. The user confirmed 1.2 NPC combat; the local 1.3 rubble/Pulse/opening-walk changes require a live test. See [INPUT_TRIAL.md](INPUT_TRIAL.md) for setup and remaining HP/death, checkpoint and replay gaps, and [SABLE_AUDIT.md](SABLE_AUDIT.md) for the public-source review. The trial has client-local observation identity, not a server run binding. Rebuild both distribution files after source changes, and verify actual behavior before claiming compatibility.

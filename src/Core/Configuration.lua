@@ -16,6 +16,8 @@ Configuration.defaults = table.freeze({
 	followDistance = 5,
 	targetRefreshInterval = 0.5,
 	attackInterval = 0.6,
+	m1Mode = "Hold",
+	m1PulseInterval = 0.15,
 	combatProgressTimeout = 15,
 	movementMode = "Pathfinding",
 	applyMovementSpeed = false,
@@ -34,6 +36,7 @@ local ranges = {
 	followDistance = { 1, 18 },
 	targetRefreshInterval = { 0.1, 3 },
 	attackInterval = { 0.1, 3 },
+	m1PulseInterval = { 0.12, 1 },
 	combatProgressTimeout = { 5, 120 },
 	movementSpeed = { 8, 32 },
 	stuckTimeout = { 2, 20 },
@@ -43,6 +46,7 @@ local ranges = {
 }
 local options = {
 	targetingMode = { Nearest = true, LowestHealth = true },
+	m1Mode = { Hold = true, Pulse = true },
 	movementMode = { Pathfinding = true, MoveTo = true },
 }
 

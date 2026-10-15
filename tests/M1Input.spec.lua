@@ -21,6 +21,50 @@ local function fixture()
 end
 
 return function(t)
+	t.it(
+		"Pulse alternates ordinary M1 presses/releases at the selected interval and stops completely",
+		function()
+			local h = fixture()
+			t.equal(h.input:Configure("Pulse", 0.15), true)
+			h.input:Hold()
+			t.equal(h.presses, 1)
+			h.time = 0.06
+			h.input:Poll()
+			t.equal(h.releases, 1)
+			h.time = 0.14
+			h.input:Poll()
+			t.equal(h.presses, 1)
+			h.time = 0.16
+			h.input:Poll()
+			t.equal(h.presses, 2)
+			h.input:Release()
+			h.time = 0.5
+			h.input:Poll()
+			t.equal(h.presses, 2)
+			t.equal(h.releases, 2)
+		end
+	)
+	t.it("Pulse never catches up in bursts and never presses after lease expiry or focus loss", function()
+		local h = fixture()
+		h.input:Configure("Pulse", 0.12)
+		h.input:Hold()
+		h.time = 1
+		h.input:Poll()
+		t.equal(h.presses, 2)
+		h.time = 1.6
+		h.input:Poll()
+		t.equal(h.presses, 2)
+		t.equal(h.input.active, false)
+		h.time = 2
+		h.input:Hold()
+		h.time = 2.06
+		h.input:Poll()
+		h.focused = false
+		h.time = 2.2
+		h.input:Poll()
+		t.equal(h.presses, 3)
+		t.equal(h.input.active, false)
+	end)
 	t.it("unimplemented host focus functions stop input instead of waiting forever", function()
 		local h = fixture()
 		h.input.functions.focused = function()

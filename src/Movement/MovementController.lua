@@ -48,10 +48,12 @@ function MovementController:Move(target, position, now, config, radius)
 	local settings = config.movementMode
 		.. tostring(config.applyMovementSpeed)
 		.. tostring(config.movementSpeed)
+	local trackingThreshold = if config.movementMode == "MoveTo" then 0.5 else 2
+	local resendInterval = if config.movementMode == "MoveTo" then 0.25 else 4
 	if
 		not active.destination
-		or Geometry.distance(active.destination, target.position) > 2
-		or now - active.sent >= 4
+		or Geometry.distance(active.destination, target.position) > trackingThreshold
+		or now - active.sent >= resendInterval
 		or active.settings ~= settings
 	then
 		active.destination, active.sent, active.settings = target.position, now, settings

@@ -5,6 +5,7 @@ for _, suite in
 		require("./M1Input.spec"),
 		require("./ObservedIntegration.spec"),
 		require("./Integration.spec"),
+		require("./Movement.spec"),
 		require("./Loader.spec"),
 	}
 do

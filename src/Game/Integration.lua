@@ -9,6 +9,7 @@ return {
 		end
 		return ObservedIntegration.new({
 			player = player,
+			players = game:GetService("Players"),
 			placeId = game.PlaceId,
 			workspace = game:GetService("Workspace"),
 			inputService = game:GetService("UserInputService"),

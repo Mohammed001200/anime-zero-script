@@ -2,7 +2,7 @@
 
 ## Verification boundary
 
-The user's recordings now identify candidate enemies, rubble HP, area/wave labels and a victory result. The user also confirmed normal held-M1 attacks and the presence of host input functions. [INPUT_TRIAL.md](INPUT_TRIAL.md) describes the new place-scoped input adapter and its limits. Damage delivery, meaningful enemy HP/death, automatic checkpoint entry and replay are still unverified. The Studio adapter remains separate.
+The user's recordings identify candidate enemies, rubble HP, area/wave labels and a victory result. Later Diagnostics supplied RubbleMaxHealth and the RunSide/WaveTemplate/NextAreaChip labels. The user confirmed normal held-M1 Auto Farm reaching and fighting NPCs in 1.2. [INPUT_TRIAL.md](INPUT_TRIAL.md) describes the 1.3 changes and their limits. New automatic rubble attacks, Pulse input, actual checkpoint entry, meaningful enemy HP/death and replay remain unverified. The Studio adapter remains separate. [SABLE_AUDIT.md](SABLE_AUDIT.md) records why no Sable implementation was available from the public loader chain.
 
 The user has only player-client access; no developer combat/replay API or source was supplied. The trial explicitly marks its snapshot as client observation and its run ID as client-local. It uses the recorded enemy folder for presence-based candidates without claiming HP or confirmed kills. Diagnostics do not automatically promote names or paths into bindings.
 
@@ -11,7 +11,7 @@ The user has only player-client access; no developer combat/replay API or source
 | Code | Actual responsibility / live gap |
 | --- | --- |
 | `Integration.lua` | Creates the guarded observation/input trial only at the recorded place/universe; empty bindings elsewhere |
-| `ObservedIntegration` / `M1Input` | Observed enemy candidates, HUD/rubble reads, normal M1 lease/guards; no verified server damage, checkpoint or replay API |
+| `ObservedIntegration` / `M1Input` | Observed enemy candidates, HUD/rubble HP/max-HP reads, guarded Hold/Pulse M1 and bounded geometric opening-walk trial; no verified server HP/death, checkpoint or replay API |
 | `AnimeZeroAdapter` | Detects supplied functions, now reports exact missing names and preflights enabled features |
 | `NPCDetector` | Chooses living, scoped snapshot records; does not discover Anime Zero's world hierarchy |
 | `CombatController` | Rate-limits/revalidates calls to `attack`/`breakRubble`; has no built-in Anime Zero attack API |

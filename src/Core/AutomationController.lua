@@ -259,7 +259,14 @@ function AutomationController:_step(snapshot, now)
 			targeting = table.clone(config)
 			targeting.maxTargetDistance = config.attackRange
 		end
-		local target = NPCDetector.select(snapshot, targeting, self.targetId, refresh)
+		-- Normal held M1 should stay on one observed candidate; chasing a newly
+		-- closer model every refresh repeatedly releases input and adds travel.
+		local target = NPCDetector.select(
+			snapshot,
+			targeting,
+			self.targetId,
+			refresh and not self.adapter.capabilities.inputTrial
+		)
 		if refresh then
 			self.lastRefresh = now
 		end

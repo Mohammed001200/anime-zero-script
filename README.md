@@ -4,15 +4,17 @@
 
 An independent, modular Luau dungeon controller with a charcoal, cyan, and purple dashboard. It coordinates enemies, rubble, area entry, delayed waves, completion, and optional replay through an explicit game adapter.
 
-**Live Anime Zero damage and unattended dungeon completion are not verified.** Version `1.2.0-input-trial` adds a guarded normal-M1 controller using paths from the user's recordings. The included Roblox Studio fixture remains separate. Develop the modular source with Rojo, or distribute the self-contained client without VS Code or Rojo.
+**The user confirmed that the published 1.2 M1 Auto Farm reaches and fights NPCs.** The `1.3.0-input-trial` update improves phase/rubble detection, closer pursuit, optional repeated M1 clicks and a bounded broken-opening walk. These changes and unattended dungeon completion still need a live test. The included Roblox Studio fixture remains separate.
 
-## Current M1 input trial (1.2.0-input-trial)
+## Current M1 input trial (1.3.0-input-trial)
 
 The user confirmed that holding M1 attacks without abilities and that their Solara session exposes `mouse1press`, `mouse1release`, and `isrbxactive`. In the recorded place only, Auto Farm now follows eligible models in `Workspace.enemies` and requests a normal M1 hold in range. Kill Aura uses the same input within the selected range, with no NPC pursuit when Auto Farm is off. The GUI still starts idle; Start Run is required.
 
-This is a **user-testable input trial**, not a verified gameplay fix. Enemy HP remains unknown, model disappearance is not proof of death, and each persistent target has a bounded attempt timeout. M1 is released on cancellation, focus/UI pause, target loss, and a 1.5-second watchdog lease. Nearest targeting is supported. LowestHealth and missing input functions refuse Start. Checkpoint entry and Retry remain manual; rubble requires readable HP and clear confirmation. No game remotes, abilities, private input services, health writes, or teleports were added.
+Enemy HP remains unknown, model disappearance is not proof of death, and each persistent target has a bounded attempt timeout. M1 is released on cancellation, focus/UI pause, target loss, and a 1.5-second watchdog lease. Nearest targeting is supported. LowestHealth and missing input functions refuse Start. Rubble detection now reads the supplied objective labels and HP/max HP, so a stale nonzero counter is not the only clearance condition. Auto Next Area can try an ordinary walk through a confirmed broken opening with readable simple geometry, then require HUD entry confirmation. That waypoint is a geometric plan, not a verified checkpoint binding. Unsupported geometry and Retry still need manual action. No game remotes, abilities, private input services, health writes, teleports or flight were added.
 
-**Trial instructions and verification limits:** [INPUT_TRIAL.md](docs/INPUT_TRIAL.md). Unload/rejoin before loading this version, equip your sword, choose Nearest and MoveTo, click Start Run, release physical M1, and move the pointer off the GUI into the game view. Verify real sword damage before continuing. Confirm the GUI version is **1.2.0-input-trial** when testing this release.
+**Trial instructions and verification limits:** [INPUT_TRIAL.md](docs/INPUT_TRIAL.md). Unload/rejoin, run the GitHub command below or execute the complete local loader, equip your sword, choose Nearest and MoveTo, click Start Run, release physical M1, and move the pointer off the GUI. Defaults now use follow distance 3 and input refresh 0.15 seconds. Hold keeps the previously user-tested input behavior; Pulse is optional repeated normal clicking. Game damage cooldowns remain in effect. Confirm **1.3.0-input-trial** in the sidebar.
+
+**Public Sable review:** its readable GitHub entry is a downloader; the FlowAuth endpoint returned HTTP 403 to the normal inspection request. No readable Anime Zero implementation or game bindings were obtained or copied. See [SABLE_AUDIT.md](docs/SABLE_AUDIT.md) for sources, exact limits and the remaining observations needed.
 
 ## Previous missing-binding release (v1.1.0)
 
@@ -44,7 +46,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Mohammed001200/anime-
 
 For a normal Studio/client installation in a place you control, create a **LocalScript in StarterPlayerScripts** and paste the complete contents of `dist/MohammadAndAli.client.lua` into it. That file is byte-for-byte identical to `loader.lua` and needs no loadstring, HTTP access, VS Code, Rojo, or ReplicatedStorage package at runtime. Actual Roblox execution and GUI rendering still require a Studio playtest. The standalone client does not install the demo server or supply Anime Zero bindings.
 
-An earlier raw-URL check returned HTTP 404; the user subsequently reported successful GUI loading in the live game. Private repositories need appropriate access; this loader does not embed credentials. Unload any older running GUI before testing **1.2.0-input-trial**.
+An earlier raw-URL check returned HTTP 404; the user subsequently reported successful GUI loading in the live game. Private repositories need appropriate access; this loader does not embed credentials. Unload any older running GUI before testing a newer version.
 
 To rebuild after editing `src/` (Python 3.10+ and its standard library):
 
@@ -81,7 +83,7 @@ See [setup](docs/SETUP.md) for commands without Aftman and a Studio acceptance w
 | Custom UI with diagnostics, toggles, sliders, dropdowns, live status, notifications, drag, restore, emergency stop | Yes | Compiles and packages; requires Studio visual/input testing |
 | Studio demo server, per-player lanes, validated combat and replay | Yes | Builds successfully; actual Studio multiplayer playtest pending |
 | Preferences | Yes | Configuration round-trip tested; demo server-session storage needs Studio verification |
-| Anime Zero hierarchy, combat, rubble interaction, progression, replay | Blocked by missing verified game details | No live access or legitimate integration API has been supplied |
+| Anime Zero observations and normal M1 combat | Input trial; 1.2 combat user-confirmed | Agent has no connected live client; new rubble/opening/Pulse changes require live tests; server HP/death and Replay remain unresolved |
 
 The prior v1.1.0 full verification recorded **64 Luau tests, 8 Python build tests, 41 compiled files, and three Rojo builds**. The input trial uses focused checks instead of rerunning the full suite. Loader checks construct the actual UI code against mocked client services; they do not render it or execute Roblox services. See [current trial checks](docs/INPUT_TRIAL.md) and [validation details](docs/VALIDATION.md).
 
@@ -179,7 +181,7 @@ If Anime Zero does not expose a legitimate integration mechanism, use this proje
 
 ## Known limits
 
-- No live Anime Zero behavior is verified, including damage, rubble health, entrance discovery, completion, and replay.
+- The user confirmed 1.2 NPC movement/combat and supplied manual rubble/progression recordings. The agent has no live client; automatic rubble/progression and new 1.3 behavior remain unverified.
 - Actual Studio GUI layout, mobile input, pathfinding, server replication, and multiplayer isolation require the acceptance pass in SETUP.md.
 - Adapters must supply coherent snapshots and non-yielding callbacks. Network work must be asynchronous and expose cached state.
 - Streaming omissions must not be reported as area clears. Missing or contradictory state causes waiting/recovery.

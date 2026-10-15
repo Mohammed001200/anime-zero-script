@@ -32,7 +32,7 @@ function M1Input:Safe()
 	if not focused then
 		return false, "Paused: focus the Roblox game window"
 	end
-	local checked, safe, reason = pcall(self.guard, self.held == true)
+	local checked, safe, reason = pcall(self.guard, self.active == true or self.held == true)
 	if not checked then
 		self.fault = "Input guard failed: " .. tostring(safe)
 		return false, self.fault
@@ -40,7 +40,7 @@ function M1Input:Safe()
 	return safe, reason
 end
 
-function M1Input:Release()
+function M1Input:_up()
 	if not self.held then
 		return self.fault == nil, self.fault
 	end
@@ -53,17 +53,34 @@ function M1Input:Release()
 	return released, self.fault
 end
 
-function M1Input:Hold()
-	local safe, problem = self:Safe()
-	if not safe then
-		self:Release()
-		return false, problem
+function M1Input:Release()
+	self.active = false
+	self.nextPress, self.nextRelease = nil, nil
+	return self:_up()
+end
+
+function M1Input:Configure(mode, interval)
+	mode, interval = mode or "Hold", interval or 0.15
+	if
+		(mode ~= "Hold" and mode ~= "Pulse")
+		or type(interval) ~= "number"
+		or interval ~= interval
+		or interval < 0.12
+		or interval > 1
+	then
+		return false, "Invalid M1 mode/interval"
 	end
-	self.lease = self.clock() + 1.5
-	if self.held then
-		return true
+	if self.mode ~= mode or self.interval ~= interval then
+		local released, problem = self:Release()
+		if not released then
+			return false, problem
+		end
+		self.mode, self.interval = mode, interval
 	end
-	-- Mark ownership before calling: a host could send input then throw.
+	return true
+end
+
+function M1Input:_down()
 	self.held = true
 	local pressed, errorMessage = pcall(self.functions.press)
 	if not pressed then
@@ -71,16 +88,56 @@ function M1Input:Hold()
 		self.fault = self.fault or ("M1 press failed: " .. tostring(errorMessage))
 		return false, self.fault
 	end
+	if self.mode == "Pulse" then
+		local now = self.clock()
+		self.nextRelease = now + math.min(0.05, self.interval / 3)
+		self.nextPress = now + self.interval
+	end
 	return true
 end
 
+function M1Input:Hold()
+	local safe, problem = self:Safe()
+	if not safe then
+		self:Release()
+		return false, problem
+	end
+	self.lease = self.clock() + 1.5
+	self.active = true
+	if self.mode == "Pulse" then
+		if not self.nextPress then
+			return self:_down()
+		end
+		self:Poll()
+		return self.fault == nil, self.fault
+	end
+	if self.held then
+		return true
+	end
+	-- Mark ownership before calling: a host could send input then throw.
+	return self:_down()
+end
+
 function M1Input:Poll()
-	if not self.held then
+	if not self.active and not self.held then
 		return
 	end
 	local safe = self:Safe()
 	if not safe or self.clock() >= self.lease then
 		self:Release()
+		return
+	end
+	if self.mode == "Pulse" then
+		local now = self.clock()
+		if self.held and now >= self.nextRelease then
+			if not self:_up() then
+				self.active = false
+				return
+			end
+		end
+		if not self.held and now >= self.nextPress then
+			self:_down()
+		end
 	end
 end
 

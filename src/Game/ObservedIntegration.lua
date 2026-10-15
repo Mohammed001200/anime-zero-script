@@ -36,10 +36,10 @@ local function text(instance)
 	return ""
 end
 
-local function readRubble(instance)
-	local value = instance:GetAttribute("RubbleHealth")
+local function readNumber(instance, attributeName)
+	local value = instance:GetAttribute(attributeName)
 	if type(value) ~= "number" then
-		local healthValue = instance:FindFirstChild("RubbleHealth", true)
+		local healthValue = instance:FindFirstChild(attributeName, true)
 		if healthValue and (healthValue:IsA("NumberValue") or healthValue:IsA("IntValue")) then
 			value = healthValue.Value
 		end
@@ -49,7 +49,7 @@ local function readRubble(instance)
 		-- Read only the exact observed attribute name, with a bounded walk.
 		local queue, index, found = { instance }, 1, nil
 		while index <= #queue and index <= 256 do
-			local candidate = queue[index]:GetAttribute("RubbleHealth")
+			local candidate = queue[index]:GetAttribute(attributeName)
 			if type(candidate) == "number" then
 				if found ~= nil and found ~= candidate then
 					return nil -- Conflicting sources are not a usable health binding.
@@ -72,13 +72,81 @@ local function readRubble(instance)
 	return nil
 end
 
-local function rubblePoint(instance, origin)
+local function readRubble(instance)
+	local health = readNumber(instance, "RubbleHealth")
+	local maximum = readNumber(instance, "RubbleMaxHealth")
+	if
+		health ~= nil
+		and (
+			health < 0
+			or (maximum ~= nil and (maximum < 0 or (health > 0 and maximum == 0) or health > maximum))
+		)
+	then
+		return nil, maximum, "RubbleHealth/RubbleMaxHealth values are inconsistent"
+	end
+	return health, maximum
+end
+
+local function under(instance, parent)
+	for _ = 1, 32 do
+		if not instance then
+			return false
+		end
+		if instance == parent then
+			return true
+		end
+		instance = instance.Parent
+	end
+	return false
+end
+
+local function areaNumber(value)
+	return tonumber(value:lower():match("area%s*[:%-]?%s*(%d+)"))
+end
+
+local function bounds(instance)
 	local frame, size
 	if instance:IsA("BasePart") then
 		frame, size = instance.CFrame, instance.Size
 	elseif instance:IsA("Model") and instance:FindFirstChildWhichIsA("BasePart", true) then
 		frame, size = instance:GetBoundingBox()
 	else
+		return nil
+	end
+	return frame, size
+end
+
+local function crossingPoint(instance, origin)
+	local frame, size = bounds(instance)
+	if not frame then
+		return nil, "No readable border geometry"
+	end
+	local alongX = size.X < size.Z
+	local thickness = if alongX then size.X else size.Z
+	local span = if alongX then size.Z else size.X
+	if math.abs(frame.UpVector.Y) < 0.98 or thickness > 12 or span < math.max(6, thickness * 2) then
+		return nil, "Border geometry does not identify a simple upright opening"
+	end
+	local localOrigin = frame:PointToObjectSpace(origin)
+	local side = if alongX then localOrigin.X else localOrigin.Z
+	if math.abs(side) <= thickness / 2 + 0.1 then
+		return nil, "Border approach side is unclear"
+	end
+	local across = -math.sign(side) * (thickness / 2 + 8)
+	local lateral = math.clamp(if alongX then localOrigin.Z else localOrigin.X, -span / 2 + 3, span / 2 - 3)
+	local destination = frame:PointToWorldSpace(
+		if alongX
+			then Vector3.new(across, localOrigin.Y, lateral)
+			else Vector3.new(lateral, localOrigin.Y, across)
+	)
+	-- This is an ordinary walk attempt through the observed opening. No
+	-- checkpoint object/API or teleport is assumed; HUD entry must confirm it.
+	return { x = destination.X, y = origin.Y, z = destination.Z }
+end
+
+local function rubblePoint(instance, origin)
+	local frame, size = bounds(instance)
+	if not frame then
 		return nil
 	end
 	-- Approach the nearest surface, rather than the center of a wide solid wall.
@@ -104,6 +172,9 @@ function Integration.new(options)
 	local heldTarget
 	local attackRange = 8
 	local input
+	local clock = options.clock or os.clock
+	local gates = {}
+	local waveScope, sawFinalWaveEnemy, emptySince
 
 	local function identity(instance)
 		if not identities[instance] then
@@ -111,6 +182,10 @@ function Integration.new(options)
 			identities[instance] = "observed-" .. serial
 		end
 		return identities[instance]
+	end
+	local function playerCharacter(model)
+		return model == player.Character
+			or (options.players and options.players:GetPlayerFromCharacter(model) ~= nil)
 	end
 
 	local function guard(held)
@@ -161,6 +236,9 @@ function Integration.new(options)
 		local playerGui = player:FindFirstChild("PlayerGui")
 		local counter = child(playerGui, "RoundHUD", "Container", "TopPart", "RemainingFrame", "EnemyCount")
 		local info = child(playerGui, "RunManage", "Sheet", "Title", "Info")
+		local side = child(playerGui, "RunSide", "Container", "Title")
+		local objective = child(playerGui, "RoundHUD", "WaveTemplate", "Title")
+		local nextArea = child(playerGui, "NextAreaChip", "Frame", "Title")
 		local result = child(playerGui, "EndScreen", "Holder", "ConstraintedHolder", "ResultText")
 		local completed = visible(result) and text(result):match("VICTORY!") ~= nil
 		-- A result overlay may block the pointer; still report victory to Stop.
@@ -176,14 +254,36 @@ function Integration.new(options)
 			cancel()
 		end
 		local counterText = if visible(counter) or completed then text(counter) else ""
-		local area, total = counterText:match("Area%s+(%d+)%s*/%s*(%d+)")
-		local entering = counterText:match("[Ee]nter area%s+(%d+)%s*/")
+		local sideText = if visible(side) then text(side) else ""
+		local objectiveText = if visible(objective) then text(objective) else ""
+		local nextText = if visible(nextArea) then text(nextArea) else ""
+		local counterEntering = counterText:lower():match("enter%s+area%s*[:%-]?%s*(%d+)")
+		local objectiveEntering = objectiveText:lower():match("enter%s+area%s*[:%-]?%s*(%d+)")
+		if counterEntering and objectiveEntering and counterEntering ~= objectiveEntering then
+			return {
+				ready = false,
+				reason = "Next-area objective labels disagree; waiting for consistent HUD",
+			}
+		end
+		local entering = counterEntering or objectiveEntering
+		local area, total = counterText:lower():match("area%s+(%d+)%s*/%s*(%d+)")
+		if counterEntering then
+			area = nil
+		end
 		local remaining = tonumber(counterText:match("(%d+)%s+left"))
 		area, total = tonumber(area), tonumber(total)
+		if area and entering and tonumber(entering) <= area then
+			entering = nil
+		end
+		if entering and (tonumber(entering) < 2 or tonumber(entering) > 5) then
+			return { ready = false, reason = "Unrecognized next-area objective; waiting for consistent HUD" }
+		end
 		if area then
 			currentArea = area
 		elseif entering then
 			currentArea = tonumber(entering) - 1
+		elseif not currentArea and areaNumber(sideText) then
+			currentArea = areaNumber(sideText)
 		elseif not currentArea and visible(info) then
 			-- The recording shows this label advances before physical area entry.
 			-- Use it only as an initial hint; it never supplies a checkpoint position.
@@ -195,6 +295,8 @@ function Integration.new(options)
 		if wasCompleted and not completed and currentArea == 1 then
 			run += 1
 			wasCompleted = false
+			table.clear(gates)
+			waveScope, sawFinalWaveEnemy, emptySince = nil, false, nil
 		end
 		if completed then
 			wasCompleted = true
@@ -216,12 +318,19 @@ function Integration.new(options)
 			characterReady = ready,
 			characterId = if character then identity(character) else "unavailable",
 			position = if ready then point(root.Position) else nil,
+			observedHUD = {
+				counter = counterText,
+				side = sideText,
+				objective = objectiveText,
+				nextArea = nextText,
+			},
 			npcs = {},
 			rubble = {},
 		}
 		table.clear(targets)
 		local folder = child(workspace, "enemies")
-		if ready and folder and (folder:IsA("Folder") or folder:IsA("Model")) then
+		local collectionReady = folder and (folder:IsA("Folder") or folder:IsA("Model"))
+		if ready and collectionReady then
 			local children = folder:GetChildren()
 			if #children > 1000 then
 				return {
@@ -231,12 +340,18 @@ function Integration.new(options)
 				}
 			end
 			for _, model in children do
-				if not model:IsA("Model") then
+				if not model:IsA("Model") or playerCharacter(model) then
 					continue
 				end
 				local npcHumanoid = model:FindFirstChildOfClass("Humanoid")
 				local npcRoot = model:FindFirstChild("HumanoidRootPart") or model.PrimaryPart
-				if npcHumanoid and npcHumanoid.Health > 0 and npcRoot and npcRoot:IsA("BasePart") then
+				if
+					npcHumanoid
+					and npcHumanoid.Health > 0
+					and npcRoot
+					and npcRoot:IsA("BasePart")
+					and under(npcRoot, model)
+				then
 					local id = identity(model)
 					targets[id] = { instance = model, folder = folder, root = npcRoot, kind = "NPC" }
 					table.insert(state.npcs, {
@@ -253,10 +368,61 @@ function Integration.new(options)
 				end
 			end
 		end
+		local infoText = text(info)
+		local infoArea = tonumber(infoText:match("Area%s+(%d+)"))
+		local wave, waves = (objectiveText .. " " .. sideText):match("[Ww]ave%s+(%d+)%s*/%s*(%d+)")
+		-- Objective and side labels are supplied live observations. Neither is
+		-- interpreted as a world-space checkpoint or an attack API.
+		if wave then
+			infoArea = currentArea
+		else
+			wave, waves = infoText:match("[Ww]ave%s+(%d+)%s*/%s*(%d+)")
+		end
+		wave, waves = tonumber(wave), tonumber(waves)
+		local finalWave = infoArea == currentArea and wave ~= nil and wave == waves
+		local moreWaves = infoArea == currentArea and wave ~= nil and waves ~= nil and wave < waves
+		local nextScope = tostring(run)
+			.. "/"
+			.. currentArea
+			.. "/"
+			.. tostring(wave)
+			.. "/"
+			.. tostring(waves)
+			.. "/"
+			.. (if folder then identity(folder) else "missing")
+		if waveScope ~= nextScope then
+			waveScope, sawFinalWaveEnemy, emptySince = nextScope, false, nil
+		end
+		if #state.npcs > 0 then
+			sawFinalWaveEnemy = sawFinalWaveEnemy or finalWave
+			emptySince = nil
+		elseif ready and collectionReady then
+			emptySince = emptySince or clock()
+		end
+		local stableFinalClear = finalWave
+			and sawFinalWaveEnemy
+			and emptySince ~= nil
+			and clock() - emptySince >= 0.25
+		local rubbleInstruction = (counterText .. " " .. objectiveText):lower():find("rubble", 1, true) ~= nil
 		local border = child(workspace, "World", "Map", "Border" .. currentArea)
 		if ready and border then
-			local health = readRubble(border)
+			local health, maxHealth, healthProblem = readRubble(border)
 			local position = rubblePoint(border, root.Position)
+			if health ~= nil then
+				local gate = gates[currentArea]
+				if not gate or gate.instance ~= border or (gate.health == 0 and health > 0) then
+					gate = { id = identity(border) .. "-opening", instance = border }
+					gates[currentArea] = gate
+				end
+				if not gate.routeAttempted then
+					gate.route, gate.problem = crossingPoint(border, root.Position)
+					gate.routeAttempted = true
+				end
+				gate.health = health
+				if health == 0 then
+					gate.destroyed = true
+				end
+			end
 			if health and health > 0 and position then
 				local id = identity(border)
 				targets[id] = { instance = border, root = border, kind = "Rubble" }
@@ -268,27 +434,55 @@ function Integration.new(options)
 					area = currentArea,
 					position = point(position),
 					health = health,
+					maxHealth = maxHealth,
 					alive = true,
 				})
-				-- Require an observed barrier with HP; an empty enemy list alone is insufficient.
-				state.areaCleared = #state.npcs == 0 and remaining == 0
+				-- A stale counter was blocking the rubble transition. Require positive
+				-- current-area border HP plus observed phase evidence, never absence alone.
+				state.areaCleared = ready
+					and collectionReady == true
+					and #state.npcs == 0
+					and (rubbleInstruction or stableFinalClear or (remaining == 0 and not moreWaves))
 				if #state.npcs == 0 and not state.areaCleared then
 					state.waitReason = border.Name
-						.. " has HP, but the HUD has not confirmed zero remaining enemies"
+						.. " has HP; waiting for rubble/final-wave clearance. Objective: "
+						.. objectiveText:sub(1, 100)
 				end
-				-- Some recorded HUD counters remain stale at 1 after the final wave.
-				-- Those snapshots wait for clear confirmation, rather than guessing.
-			elseif health == nil then
+			elseif health and health > 0 then
 				state.waitReason = border.Name
-					.. " has no unambiguous accessible RubbleHealth attribute/number value"
+					.. " has HP but no usable Part/Model bounds; capture its class and geometry"
+			elseif health == nil then
+				state.waitReason = healthProblem
+					or (border.Name .. " has no unambiguous accessible RubbleHealth attribute/number value")
 			end
+		end
+		local gate = gates[currentArea]
+		local chipArea = areaNumber(nextText)
+		if not entering and gate and gate.destroyed and chipArea == currentArea + 1 then
+			entering = tostring(chipArea)
 		end
 		if entering then
 			state.areaCleared, state.spawnPending = true, false
-			state.objectiveReason = "Checkpoint crossing is unverified. Enter Area "
-				.. entering
-				.. " manually; farming resumes after entry."
-			state.manualObjective = true
+			local gate = gates[currentArea]
+			if gate and not border then
+				gate.destroyed = true
+			end
+			if tonumber(entering) == currentArea + 1 and gate and gate.destroyed and gate.route then
+				state.nextEntrance = {
+					id = gate.id,
+					name = "Walk through Border" .. currentArea .. " opening",
+					dungeonId = state.dungeonId,
+					runId = state.runId,
+					area = currentArea + 1,
+					position = gate.route,
+				}
+			else
+				state.objectiveReason = "Enter Area "
+					.. entering
+					.. " manually: "
+					.. (gate and gate.problem or "no readable, confirmed broken-border route")
+				state.manualObjective = true
+			end
 		else
 			state.spawnPending = not state.areaCleared and #state.npcs == 0
 			if not folder then
@@ -312,7 +506,15 @@ function Integration.new(options)
 			cancel()
 			return false, "Target is no longer observed; disappearance does not prove death"
 		end
-		if target.kind == "NPC" and (target.instance.Parent ~= target.folder or not target.root.Parent) then
+		if
+			target.kind == "NPC"
+			and (
+				target.instance.Parent ~= target.folder
+				or child(workspace, "enemies") ~= target.folder
+				or not under(target.root, target.instance)
+				or playerCharacter(target.instance)
+			)
+		then
 			cancel()
 			return false, "Enemy left the observed enemy folder"
 		end
@@ -368,17 +570,25 @@ function Integration.new(options)
 			if config.attackInterval > 1 then
 				return false, "Input trial requires Attack interval <= 1 second to renew the M1 safety lease"
 			end
+			local configured, problem = input:Configure(config.m1Mode, config.m1PulseInterval)
+			if not configured then
+				return false, problem
+			end
 			return true
 		end,
 		integrationStatus = function()
 			local available, reason = input:Available()
 			return {
 				configured = false,
-				missing = { "enemy health/death confirmation", "nextEntrance", "requestReplay" },
+				missing = {
+					"enemy health/death confirmation",
+					"verified checkpoint traversal",
+					"requestReplay",
+				},
 				summary = if available
-					then "INPUT TRIAL: observed enemy models + normal M1. HP unknown; bounded target timeout. Live damage is not verified."
+					then "Normal M1 farming was user-confirmed in 1.2. New rubble, opening-walk and Pulse changes need live tests. Enemy HP remains unknown."
 					else reason,
-				replay = "Auto Retry and checkpoint crossing remain unavailable; enter checkpoints and Retry manually.",
+				replay = "Broken-border walking requires live validation; unsupported geometry pauses. Auto Retry remains manual.",
 			}
 		end,
 		snapshot = snapshot,

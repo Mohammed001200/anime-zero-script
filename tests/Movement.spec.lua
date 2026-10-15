@@ -1,5 +1,27 @@
 local Mock = require("./MockDungeon")
 return function(t)
+	t.it(
+		"MoveTo follows moving targets with shorter refreshes without changing Pathfinding policy",
+		function()
+			local h = Mock.harness()
+			h.config:Set("movementMode", "MoveTo")
+			local target = { id = "moving", position = { x = 20, y = 0, z = 0 } }
+			h.movement:Move(target, h.mock.position, 0, h.config:Get(), 3)
+			target.position = { x = 21, y = 0, z = 0 }
+			h.movement:Move(target, h.mock.position, 0.1, h.config:Get(), 3)
+			t.equal(#h.mock.moves, 2)
+			h.movement:Move(target, h.mock.position, 0.4, h.config:Get(), 3)
+			t.equal(#h.mock.moves, 3)
+			h:destroy()
+			h = Mock.harness()
+			h.config:Set("movementMode", "Pathfinding")
+			h.movement:Move(target, h.mock.position, 0, h.config:Get(), 3)
+			target.position = { x = 22, y = 0, z = 0 }
+			h.movement:Move(target, h.mock.position, 0.1, h.config:Get(), 3)
+			t.equal(#h.mock.moves, 1)
+			h:destroy()
+		end
+	)
 	t.it("navigation stops outside a solid target at the configured follow distance", function()
 		local h = Mock.harness()
 		h.movement:Move(

@@ -457,7 +457,14 @@ function MainWindow:_dashboard()
 		"Auto Break Rubble",
 		"Clear the barrier after the area is confirmed clear"
 	)
-	self:_toggle(page, "autoNextArea", "Auto Next Area", "Follow the verified entrance to the next area")
+	self:_toggle(
+		page,
+		"autoNextArea",
+		"Auto Next Area",
+		if self.adapter.capabilities.inputTrial
+			then "Walk through a confirmed broken border when its opening geometry is clear. Live trial required."
+			else "Follow the verified entrance to the next area"
+	)
 	self:_toggle(
 		page,
 		"autoRetry",
@@ -469,6 +476,24 @@ end
 
 function MainWindow:_farm()
 	local page = self.pages["Auto Farm"]
+	if self.adapter.capabilities.inputTrial then
+		self:_dropdown(
+			page,
+			"m1Mode",
+			"M1 input mode",
+			"Hold is live-tested by you; Pulse sends repeated normal clicks.",
+			{ "Hold", "Pulse" }
+		)
+		self:_slider(
+			page,
+			"m1PulseInterval",
+			"M1 pulse interval",
+			"Seconds between clicks in Pulse mode. Damage cooldowns stay controlled by the game.",
+			0.12,
+			1,
+			0.01
+		)
+	end
 	self:_toggle(
 		page,
 		"killAura",
@@ -508,7 +533,9 @@ function MainWindow:_farm()
 		page,
 		"targetRefreshInterval",
 		"Target refresh",
-		"Seconds between target priority checks",
+		if self.adapter.capabilities.inputTrial
+			then "Current target stays locked while available; loss selects the next candidate on the next update."
+			else "Seconds between target priority checks",
 		0.1,
 		3,
 		0.1
@@ -539,7 +566,14 @@ function MainWindow:_dungeon()
 	local page = self.pages.Dungeon
 	self:_progress(page)
 	self:_toggle(page, "autoBreakRubble", "Auto Break Rubble", "Use the configured rubble interaction")
-	self:_toggle(page, "autoNextArea", "Auto Next Area", "Move to the verified next-area entrance")
+	self:_toggle(
+		page,
+		"autoNextArea",
+		"Auto Next Area",
+		if self.adapter.capabilities.inputTrial
+			then "Normal walk through the broken opening; wait for the HUD to confirm entry."
+			else "Move to the verified next-area entrance"
+	)
 	self:_toggle(
 		page,
 		"waitForNPCSpawn",

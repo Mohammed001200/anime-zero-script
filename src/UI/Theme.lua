@@ -12,5 +12,5 @@ return table.freeze({
 	green = Color3.fromRGB(93, 227, 165),
 	font = Enum.Font.Gotham,
 	bold = Enum.Font.GothamBold,
-	version = "1.2.0-input-trial",
+	version = "1.3.0-input-trial",
 })
