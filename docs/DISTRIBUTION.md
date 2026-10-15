@@ -80,4 +80,4 @@ Review the diff for `src/Bootstrap.lua`, `src/UI/MainWindow.lua`, the bundler/te
 
 ## Remaining Anime Zero work
 
-`src/Game/Integration.lua` is still empty. Follow GAME_INTEGRATION.md to confirm dungeon/run identity, current area, wave-clear state, living NPCs, rubble health/destruction, entrances, combat actions, completion and replay. Edit those bindings in source and rebuild both distribution files. Confirm GUI rendering, input, pathfinding and all five areas in an authorized Roblox test environment before claiming compatibility.
+`src/Game/Integration.lua` now supplies a place-scoped, guarded M1 input trial. See [INPUT_TRIAL.md](INPUT_TRIAL.md) for setup and the remaining HP/death, checkpoint and replay gaps. The trial has client-local observation identity, not a server run binding. Rebuild both distribution files after source changes, and verify actual input, movement and damage before claiming compatibility.

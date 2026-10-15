@@ -8,6 +8,7 @@ function Adapter.new(bindings)
 	return setmetatable({
 		bindings = bindings,
 		capabilities = {
+			inputTrial = bindings.inputTrial == true,
 			snapshot = type(bindings.snapshot) == "function",
 			attack = type(bindings.attack) == "function",
 			breakRubble = type(bindings.breakRubble) == "function",
@@ -19,6 +20,9 @@ function Adapter.new(bindings)
 end
 
 function Adapter:integrationStatus()
+	if self.bindings.integrationStatus then
+		return self.bindings.integrationStatus()
+	end
 	local missing = {}
 	for _, key in { "snapshot", "attack", "breakRubble", "requestReplay" } do
 		if type(self.bindings[key]) ~= "function" then
@@ -59,6 +63,9 @@ function Adapter:preflight(config)
 			"Integration unavailable: missing "
 				.. table.concat(missing, ", ")
 				.. ". Automation stopped; open Diagnostics. Recovery cannot create game bindings."
+	end
+	if self.bindings.preflight then
+		return self.bindings.preflight(config)
 	end
 	return true
 end

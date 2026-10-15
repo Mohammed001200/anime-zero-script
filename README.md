@@ -4,13 +4,21 @@
 
 An independent, modular Luau dungeon controller with a charcoal, cyan, and purple dashboard. It coordinates enemies, rubble, area entry, delayed waves, completion, and optional replay through an explicit game adapter.
 
-**Anime Zero integration is not configured or verified.** The included Roblox Studio fixture and deterministic tests demonstrate the controller using mechanics owned by this project. No third-party loader or obfuscated implementation is used. Develop the modular source with Rojo, or distribute the self-contained client without VS Code or Rojo.
+**Live Anime Zero damage and unattended dungeon completion are not verified.** Version `1.2.0-input-trial` adds a guarded normal-M1 controller using paths from the user's recordings. The included Roblox Studio fixture remains separate. Develop the modular source with Rojo, or distribute the self-contained client without VS Code or Rojo.
 
-## Live-game status and the missing-binding error (v1.1.0)
+## Current M1 input trial (1.2.0-input-trial)
+
+The user confirmed that holding M1 attacks without abilities and that their Solara session exposes `mouse1press`, `mouse1release`, and `isrbxactive`. In the recorded place only, Auto Farm now follows eligible models in `Workspace.enemies` and requests a normal M1 hold in range. Kill Aura uses the same input within the selected range, with no NPC pursuit when Auto Farm is off. The GUI still starts idle; Start Run is required.
+
+This is a **user-testable input trial**, not a verified gameplay fix. Enemy HP remains unknown, model disappearance is not proof of death, and each persistent target has a bounded attempt timeout. M1 is released on cancellation, focus/UI pause, target loss, and a 1.5-second watchdog lease. Nearest targeting is supported. LowestHealth and missing input functions refuse Start. Checkpoint entry and Retry remain manual; rubble requires readable HP and clear confirmation. No game remotes, abilities, private input services, health writes, or teleports were added.
+
+**Trial instructions and verification limits:** [INPUT_TRIAL.md](docs/INPUT_TRIAL.md). Unload/rejoin before loading this version, equip your sword, choose Nearest and MoveTo, click Start Run, release physical M1, and move the pointer off the GUI into the game view. Verify real sword damage before continuing. Confirm the GUI version is **1.2.0-input-trial** when testing this release.
+
+## Previous missing-binding release (v1.1.0)
 
 The user reports that the loader and Mohammad & Ali GUI run in the real game. This verifies the GUI shell for that user's host, **not any combat, farming, rubble, progression or replay integration**. The agent has no connected Roblox player session and has not independently observed gameplay.
 
-The cause of `Anime Zero integration is not configured` is concrete: `src/Game/Integration.lua` returns `{}`. NPCDetector and RubbleDetector filter adapter snapshots; they do not know the game's object hierarchy. CombatController calls supplied bindings; it has no Anime Zero attack API. Auto Retry previously appeared unresponsive because its control was disabled when `requestReplay` was missing.
+In v1.1.0, `src/Game/Integration.lua` returned `{}`, causing `Anime Zero integration is not configured`. NPCDetector and RubbleDetector filter adapter snapshots. CombatController calls supplied bindings; it has no Anime Zero attack remote. Auto Retry previously appeared unresponsive because its control was disabled when `requestReplay` was missing. The new place-scoped factory supplies the input trial described above; other places still require supplied bindings.
 
 Version 1.1.0 preserves the GUI and adds:
 
@@ -24,7 +32,7 @@ Do not use candidate names/tags as verified scope or attack APIs. Follow [LIVE_O
 
 ## Single-file distribution and GitHub command
 
-`loader.lua` is a generated, readable client bundle containing all **25 modules**. It opens the GUI on startup, leaves automation idle, and does not download any other code or require installed ModuleScripts. Repeated execution reveals the existing GUI and reuses its controller. Concurrent initialization is rejected; failed construction rolls back partial resources.
+`loader.lua` is a generated, readable client bundle containing all **27 modules**. It opens the GUI on startup, leaves automation idle, and does not download any other code or require installed ModuleScripts. Repeated execution reveals the existing GUI and reuses its controller. Concurrent initialization is rejected; failed construction rolls back partial resources.
 
 After the file has been published to the accessible `main` branch, your requested command is:
 
@@ -36,7 +44,7 @@ loadstring(game:HttpGet("https://raw.githubusercontent.com/Mohammed001200/anime-
 
 For a normal Studio/client installation in a place you control, create a **LocalScript in StarterPlayerScripts** and paste the complete contents of `dist/MohammadAndAli.client.lua` into it. That file is byte-for-byte identical to `loader.lua` and needs no loadstring, HTTP access, VS Code, Rojo, or ReplicatedStorage package at runtime. Actual Roblox execution and GUI rendering still require a Studio playtest. The standalone client does not install the demo server or supply Anime Zero bindings.
 
-An earlier raw-URL check returned HTTP 404; the user subsequently reported successful GUI loading in the live game. The v1.1.0 changes in this task are local and **have not been pushed**. Private repositories need appropriate access; this loader does not embed credentials.
+An earlier raw-URL check returned HTTP 404; the user subsequently reported successful GUI loading in the live game. Private repositories need appropriate access; this loader does not embed credentials. Unload any older running GUI before testing **1.2.0-input-trial**.
 
 To rebuild after editing `src/` (Python 3.10+ and its standard library):
 
@@ -75,7 +83,7 @@ See [setup](docs/SETUP.md) for commands without Aftman and a Studio acceptance w
 | Preferences | Yes | Configuration round-trip tested; demo server-session storage needs Studio verification |
 | Anime Zero hierarchy, combat, rubble interaction, progression, replay | Blocked by missing verified game details | No live access or legitimate integration API has been supplied |
 
-Current automated result: **64 Luau tests and 8 Python build tests pass**, all **41 Luau files compile**, formatting passes, and all three Rojo projects build. Loader tests construct the actual UI code against mocked client services; they do not render it or execute Roblox services. See [validation details](docs/VALIDATION.md).
+The prior v1.1.0 full verification recorded **64 Luau tests, 8 Python build tests, 41 compiled files, and three Rojo builds**. The input trial uses focused checks instead of rerunning the full suite. Loader checks construct the actual UI code against mocked client services; they do not render it or execute Roblox services. See [current trial checks](docs/INPUT_TRIAL.md) and [validation details](docs/VALIDATION.md).
 
 ## Architecture
 
@@ -165,7 +173,7 @@ Area 1 → NPCs → Rubble → Area 2 → NPCs → Rubble
 
 ## Connect verified game mechanics
 
-Begin with [GAME_INTEGRATION.md](docs/GAME_INTEGRATION.md). `src/Game/Integration.lua` deliberately returns no bindings. Supply authorized snapshot/combat/replay functions only after observing and documenting the game's actual hierarchy and available mechanics. Use `production.project.json` to exclude demo code from the place.
+Begin with [GAME_INTEGRATION.md](docs/GAME_INTEGRATION.md) and [INPUT_TRIAL.md](docs/INPUT_TRIAL.md). `src/Game/Integration.lua` creates the observed-input adapter only in the recorded place/universe; it returns no bindings elsewhere. Supply authorized snapshot/combat/replay functions only after observing and documenting the game's actual hierarchy and available mechanics. Use `production.project.json` to exclude demo code from the place.
 
 If Anime Zero does not expose a legitimate integration mechanism, use this project in a Studio place you control. Merely running a LocalScript cannot create server authority in another developer's game. No remotes, object names, license bypasses, or anti-cheat evasion techniques have been invented here.
 

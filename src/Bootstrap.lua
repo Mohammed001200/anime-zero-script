@@ -104,6 +104,9 @@ function Bootstrap.start()
 
 	local ok, result = xpcall(function()
 		local bindings = require(script.Parent.Game.Integration)
+		if not RunService:IsStudio() and type(bindings.create) == "function" then
+			bindings = bindings.create(player)
+		end
 		local adapter = if RunService:IsStudio() and bindings.snapshot == nil
 			then StudioDemoAdapter.new(player)
 			else AnimeZeroAdapter.new(bindings)
@@ -114,6 +117,10 @@ function Bootstrap.start()
 			end
 		end)
 		local config = Configuration.new()
+		if bindings.inputTrial then
+			-- Ordinary Humanoid navigation; moving NPCs do not need speculative paths.
+			config:Set("movementMode", "MoveTo")
+		end
 		session.config = config
 		cleanup:Add(config)
 		local loaded, preferences = pcall(function()
@@ -141,6 +148,7 @@ function Bootstrap.start()
 			logger,
 			if getmetatable(adapter) == StudioDemoAdapter
 				then "STUDIO DEMO"
+				elseif bindings.inputTrial then "M1 INPUT TRIAL · LIVE DAMAGE UNVERIFIED"
 				elseif bindings.snapshot then "CUSTOM ADAPTER · VERIFY IN GAME"
 				else "VERIFIED ADAPTER REQUIRED",
 			playerGui,

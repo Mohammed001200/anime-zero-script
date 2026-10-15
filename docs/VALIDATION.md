@@ -2,7 +2,25 @@
 
 Date: **2026-10-15** (Europe/Stockholm)
 
-## Executed locally
+## Current input trial
+
+The user supplied full-run and weaker-sword recordings plus a screenshot confirming
+that M1 press/release and window-focus functions exist in their Solara session.
+The recordings show numbered enemy models, four rubble barriers losing HP,
+five areas, a final boss wave, victory and a manual reset. Enemy Humanoid HP never
+changed in these captures. See [INPUT_TRIAL.md](INPUT_TRIAL.md) for the exact evidence
+boundary and user-run acceptance procedure.
+
+This change runs focused `tests/input.luau` checks, compilation/formatting of changed
+Luau and generated bundles, and bundle freshness checks. It does not rerun the full
+suite or execute a real Solara input call. The rebuilt gameplay remains unverified.
+
+Executed result: **34 focused checks passed**, **18 changed/generated Luau files
+compiled**, changed-file formatting and bundle freshness passed, and Git whitespace
+checks passed. Input calls and Roblox services in these checks are mocks. No real
+enemy damage, navigation, rubble attack, checkpoint entry, or replay was performed.
+
+## Prior v1.1.0 verification (historical)
 
 | Check | Result |
 | --- | --- |
@@ -44,4 +62,4 @@ Luau compilation and Rojo packaging do not validate Roblox runtime properties, s
 
 ## Blocked by missing game evidence
 
-All live Anime Zero integration: actual object hierarchy, active dungeon/run identity, NPC health, authoritative wave-clear state, rubble interaction, entrance availability, completion and replay. None has been inspected or tested. No live compatibility claim is made.
+Server dungeon/run identity, NPC HP/death, authoritative wave-clear state, input delivery/damage, automatic checkpoint entry and replay remain unverified. The user-provided path/HP/HUD observations described above support the guarded input trial, not a live compatibility claim.

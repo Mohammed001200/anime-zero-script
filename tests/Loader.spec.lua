@@ -7,6 +7,41 @@ local function execute(host)
 end
 
 return function(t)
+	t.it("recorded-place bundle detects M1 input, stays idle, and rolls back its watchdog", function()
+		local Signal = require("../src/Utils/Signal")
+		local host = MockClient.new()
+		host.environment.game.PlaceId = 109151342576374
+		host.environment.game.GameId = 10512942223
+		host.services.GuiService = { MenuIsOpen = false, MenuOpened = Signal.new() }
+		host.services.UserInputService.WindowFocusReleased = Signal.new()
+		host.services.UserInputService.TextBoxFocused = Signal.new()
+		local presses = 0
+		host.environment.mouse1press = function()
+			presses += 1
+		end
+		host.environment.mouse1release = function() end
+		host.environment.isrbxactive = function()
+			return true
+		end
+		host.failTween = true
+		local ok = pcall(execute, host)
+		t.equal(ok, false)
+		t.equal(host:connections(host.services.RunService.Heartbeat), 0)
+		t.equal(host:connections(host.services.UserInputService.WindowFocusReleased), 0)
+		host.failTween = false
+		local session = execute(host)
+		t.equal(session.controller.adapter.capabilities.inputTrial, true)
+		t.equal(session.config:Get().movementMode, "MoveTo")
+		t.equal(session.controller.enabled, false)
+		t.equal(presses, 0)
+		t.equal(host:connections(host.services.RunService.Heartbeat), 2)
+		local duplicate = execute(host)
+		t.equal(duplicate.reused, true)
+		t.equal(host:connections(host.services.RunService.Heartbeat), 2)
+		session:Destroy()
+		t.equal(host:connections(host.services.RunService.Heartbeat), 0)
+		t.equal(host:connections(host.services.GuiService.MenuOpened), 0)
+	end)
 	t.it(
 		"real adapter startup errors immediately and Auto Retry click explains its missing binding",
 		function()

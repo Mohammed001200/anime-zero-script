@@ -2,15 +2,16 @@
 
 ## Verification boundary
 
-No Anime Zero hierarchy or live mechanics have been inspected in this session. `AnimeZeroAdapter.lua` is a binding host with capability detection, not a claim of live support. `Integration.lua` has an empty binding table deliberately. The Studio adapter is a working reference for this project's own fixture only.
+The user's recordings now identify candidate enemies, rubble HP, area/wave labels and a victory result. The user also confirmed normal held-M1 attacks and the presence of host input functions. [INPUT_TRIAL.md](INPUT_TRIAL.md) describes the new place-scoped input adapter and its limits. Damage delivery, meaningful enemy HP/death, automatic checkpoint entry and replay are still unverified. The Studio adapter remains separate.
 
-The user has now observed the loader/GUI working in the live game and has only player-client access. No actual target, progression, combat or replay contract has been provided. Use Diagnostics and [LIVE_OBSERVATIONS.md](LIVE_OBSERVATIONS.md) to collect real observations. The diagnostic candidates are not runtime targets and are never promoted into bindings automatically.
+The user has only player-client access; no developer combat/replay API or source was supplied. The trial explicitly marks its snapshot as client observation and its run ID as client-local. It uses the recorded enemy folder for presence-based candidates without claiming HP or confirmed kills. Diagnostics do not automatically promote names or paths into bindings.
 
 ## Audit of the reported failure
 
 | Code | Actual responsibility / live gap |
 | --- | --- |
-| `Integration.lua` | Empty table; supplies no game snapshot or actions |
+| `Integration.lua` | Creates the guarded observation/input trial only at the recorded place/universe; empty bindings elsewhere |
+| `ObservedIntegration` / `M1Input` | Observed enemy candidates, HUD/rubble reads, normal M1 lease/guards; no verified server damage, checkpoint or replay API |
 | `AnimeZeroAdapter` | Detects supplied functions, now reports exact missing names and preflights enabled features |
 | `NPCDetector` | Chooses living, scoped snapshot records; does not discover Anime Zero's world hierarchy |
 | `CombatController` | Rate-limits/revalidates calls to `attack`/`breakRubble`; has no built-in Anime Zero attack API |

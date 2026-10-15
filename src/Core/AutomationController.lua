@@ -200,6 +200,10 @@ function AutomationController:_step(snapshot, now)
 	local config = self.config:Get()
 	local valid, problem = AreaDetector.validate(snapshot)
 	if not valid then
+		if type(snapshot) == "table" and snapshot.paused == true then
+			self:_wait("inputPaused", "RECOVERING", problem, now, config, false)
+			return
+		end
 		if type(snapshot) == "table" and snapshot.blocked == true then
 			self:_fail(problem)
 			return
@@ -291,7 +295,9 @@ function AutomationController:_step(snapshot, now)
 				snapshot,
 				now,
 				config,
-				if config.killAura then config.attackRange else config.followDistance,
+				if config.killAura and not self.adapter.capabilities.inputTrial
+					then config.attackRange
+					else config.followDistance,
 				"MOVE_TO_NPC"
 			)
 		end
@@ -314,7 +320,7 @@ function AutomationController:_step(snapshot, now)
 		self:_wait(
 			"spawn",
 			"WAIT_FOR_NPC_SPAWN",
-			"Waiting for wave or area-clear confirmation",
+			snapshot.waitReason or "Waiting for wave or area-clear confirmation",
 			now,
 			config,
 			config.waitForNPCSpawn
@@ -323,7 +329,12 @@ function AutomationController:_step(snapshot, now)
 	end
 	if self.clearedScope ~= scope then
 		self.clearedScope = scope
-		self.machine:Set("CHECK_AREA_COMPLETION", "Area cleared by verified state")
+		self.machine:Set(
+			"CHECK_AREA_COMPLETION",
+			if snapshot.source == "client-observation"
+				then "No observed enemy candidates; HUD and barrier checked"
+				else "Area cleared by verified state"
+		)
 		self.machine:Set("FIND_RUBBLE", "Checking progression objectives")
 	end
 	if inspection.objective == "Rubble" then
@@ -374,10 +385,10 @@ function AutomationController:_step(snapshot, now)
 		self:_wait(
 			"objective",
 			"FIND_RUBBLE",
-			"Waiting for rubble, entrance, or completion state",
+			snapshot.objectiveReason or "Waiting for rubble, entrance, or completion state",
 			now,
 			config,
-			true
+			not snapshot.manualObjective
 		)
 	end
 end

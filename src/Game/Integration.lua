@@ -1,5 +1,20 @@
--- The user confirmed GUI startup, not combat/progression/replay APIs.
--- Player-client access alone has not supplied a verified dungeon snapshot or action contract.
--- Use Diagnostics + docs/LIVE_OBSERVATIONS.md to collect the missing evidence.
--- Populate only confirmed bindings; names/tags/UI labels must not become guessed APIs.
-return {}
+local ObservedIntegration =
+	require(if script then script.Parent.ObservedIntegration else "./ObservedIntegration")
+
+return {
+	create = function(player)
+		-- Scope comes from the supplied recordings, not a guessed game identity.
+		if game.PlaceId ~= 109151342576374 or game.GameId ~= 10512942223 then
+			return {}
+		end
+		return ObservedIntegration.new({
+			player = player,
+			placeId = game.PlaceId,
+			workspace = game:GetService("Workspace"),
+			inputService = game:GetService("UserInputService"),
+			guiService = game:GetService("GuiService"),
+			heartbeat = game:GetService("RunService").Heartbeat,
+			input = { press = mouse1press, release = mouse1release, focused = isrbxactive },
+		})
+	end,
+}

@@ -19,11 +19,15 @@ function CombatController:Attack(kind, target, snapshot, now, config)
 	if self.targetKey ~= key then
 		self:Cancel()
 		self.targetKey, self.health, self.progressAt = key, target.health, now
-	elseif target.health < self.health then
+	elseif target.healthKnown ~= false and self.health ~= nil and target.health < self.health then
 		self.health, self.progressAt = target.health, now
 	elseif now - self.progressAt >= config.combatProgressTimeout then
 		self:Cancel()
-		return false, "Combat made no health progress: " .. target.id
+		return false,
+			if target.healthKnown == false
+				then "Unverified damage: observed target remained for the combat timeout. Increase timeout only after confirming normal M1 hits: "
+					.. target.id
+				else "Combat made no health progress: " .. target.id
 	end
 	if now - self.lastAttack < config.attackInterval then
 		return true

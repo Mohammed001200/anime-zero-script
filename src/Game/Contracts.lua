@@ -1,4 +1,5 @@
--- An adapter must provide one coherent, authoritative snapshot without yielding.
+-- Adapters supply a coherent snapshot without yielding. The input trial labels
+-- client observations explicitly and does not claim authoritative HP/run identity.
 export type Point = { x: number, y: number, z: number }
 export type Target = {
 	id: string,
@@ -7,13 +8,20 @@ export type Target = {
 	runId: string,
 	area: number,
 	position: Point,
-	health: number,
+	health: number?,
+	healthKnown: boolean?,
+	observedPresence: boolean?,
 	alive: boolean,
 }
 export type Entrance = { id: string, dungeonId: string, runId: string, area: number, position: Point }
 export type Snapshot = {
 	ready: boolean,
 	blocked: boolean?,
+	paused: boolean?,
+	source: string?,
+	objectiveReason: string?,
+	waitReason: string?,
+	manualObjective: boolean?,
 	reason: string?,
 	dungeonId: string,
 	runId: string,
@@ -30,6 +38,7 @@ export type Snapshot = {
 	nextEntrance: Entrance?,
 }
 export type Capabilities = {
+	inputTrial: boolean?,
 	snapshot: boolean?,
 	attack: boolean,
 	breakRubble: boolean,

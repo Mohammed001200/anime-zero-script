@@ -6,8 +6,7 @@ function NPCDetector.valid(target, snapshot)
 		and type(target.id) == "string"
 		and target.id ~= ""
 		and target.alive == true
-		and Geometry.finite(target.health)
-		and target.health > 0
+		and ((Geometry.finite(target.health) and target.health > 0) or (target.healthKnown == false and target.observedPresence == true and target.health == nil))
 		and target.dungeonId == snapshot.dungeonId
 		and target.runId == snapshot.runId
 		and target.area == snapshot.area
@@ -32,7 +31,9 @@ function NPCDetector.select(snapshot, config, previousId, refresh)
 			if not refresh and target.id == previousId then
 				return target
 			end
-			local candidate = if config.targetingMode == "LowestHealth" then target.health else distance
+			local candidate = if config.targetingMode == "LowestHealth"
+				then target.health or math.huge
+				else distance
 			if not best or candidate < score or (candidate == score and target.id < best.id) then
 				best, score = target, candidate
 			end

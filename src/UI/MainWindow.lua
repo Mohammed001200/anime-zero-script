@@ -435,7 +435,14 @@ function MainWindow:_dashboard()
 		TextWrapped = true,
 		TextTruncate = Enum.TextTruncate.AtEnd,
 	})
-	self:_toggle(page, "autoFarm", "Auto Farm", "Farm living enemies in the active area")
+	self:_toggle(
+		page,
+		"autoFarm",
+		"Auto Farm",
+		if self.adapter.capabilities.inputTrial
+			then "Follow observed enemy models and hold normal M1. HP unknown; live trial required."
+			else "Farm living enemies in the active area"
+	)
 	self:_toggle(
 		page,
 		"killAura",
@@ -519,7 +526,9 @@ function MainWindow:_farm()
 		page,
 		"combatProgressTimeout",
 		"Combat progress timeout",
-		"Recover when target health stops decreasing",
+		if self.adapter.capabilities.inputTrial
+			then "Maximum M1 time per observed enemy; HP is unknown. Rubble uses observed HP."
+			else "Recover when target health stops decreasing",
 		5,
 		120,
 		1
@@ -991,6 +1000,10 @@ function MainWindow:_interaction(header)
 		end
 	end))
 	self.cleanup:Add(UserInputService.InputBegan:Connect(function(input, processed)
+		if input.KeyCode == Enum.KeyCode.End then
+			self.controller:Stop("Emergency stop shortcut")
+			return
+		end
 		if processed then
 			return
 		end
@@ -1000,8 +1013,6 @@ function MainWindow:_interaction(header)
 			else
 				self:Show()
 			end
-		elseif input.KeyCode == Enum.KeyCode.End then
-			self.controller:Stop("Emergency stop shortcut")
 		end
 	end))
 end

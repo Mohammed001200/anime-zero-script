@@ -7,6 +7,8 @@ local suites = {
 	require("./Loader.spec"),
 	require("./Integration.spec"),
 	require("./Diagnostics.spec"),
+	require("./M1Input.spec"),
+	require("./ObservedIntegration.spec"),
 }
 for _, suite in suites do
 	suite(Test)
